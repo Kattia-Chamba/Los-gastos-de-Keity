@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Gastos 🌸</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
+
+        * { font-family: 'Nunito', system-ui, sans-serif; }
+
+        body { background: #fdf4fb; }
+
+        .bg-main {
+            background: linear-gradient(135deg, #fdf4fb 0%, #f0ebff 50%, #fce4f3 100%);
+            min-height: 100vh;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(200, 130, 200, 0.1);
+            border: 1.5px solid #f3d6f0;
+        }
+
+        .card-pink {
+            background: linear-gradient(135deg, #fce4f3, #f9d0ec);
+            border: 1.5px solid #f7bde8;
+        }
+
+        .card-lila {
+            background: linear-gradient(135deg, #ede9ff, #ddd5ff);
+            border: 1.5px solid #c9bfff;
+        }
+
+        .card-mint {
+            background: linear-gradient(135deg, #e0fdf4, #ccfbf1);
+            border: 1.5px solid #a7f3d0;
+        }
+
+        .card-peach {
+            background: linear-gradient(135deg, #fff0e6, #ffe4cc);
+            border: 1.5px solid #fdd0aa;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f472b6, #c084fc);
+            color: white;
+            font-weight: 700;
+            border-radius: 14px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(196, 132, 252, 0.35);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(196, 132, 252, 0.45);
+        }
+
+        .btn-soft {
+            background: #f9f0ff;
+            color: #9b59c7;
+            border: 1.5px solid #e0c8ff;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-soft:hover { background: #f0e0ff; }
+
+        input, select {
+            background: #fdf6ff !important;
+            color: #5a3d6b !important;
+            border: 1.5px solid #e8d0f5 !important;
+            border-radius: 14px !important;
+            transition: all 0.2s;
+        }
+        input::placeholder { color: #c9a8e0 !important; }
+        input:focus, select:focus {
+            outline: none !important;
+            border-color: #c084fc !important;
+            box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.15) !important;
+        }
+        select option { background: #fdf6ff; color: #5a3d6b; }
+
+        .header-bg {
+            background: white;
+            border-bottom: 2px solid #f3d6f0;
+            box-shadow: 0 2px 20px rgba(200,130,200,0.08);
+        }
+
+        .tag {
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #fdf4fb; }
+        ::-webkit-scrollbar-thumb { background: #e8a8d8; border-radius: 4px; }
+
+        .row-hover:hover { background: #fdf0fb; }
+
+        .divider { border-color: #f3d6f0; }
+    </style>
+</head>
+<body>
+<div class="bg-main">
+
+<!-- ══════════════════ AUTH ══════════════════ -->
+<div id="authScreen" class="min-h-screen flex items-center justify-center p-4">
+    <div class="card p-8 w-full max-w-sm fade-in">
+        <div class="text-center mb-7">
+            <div class="text-5xl mb-2">🌸</div>
+            <h1 class="text-3xl font-extrabold" style="color:#c054a0">Mis Gastos</h1>
+            <p class="text-sm mt-1" style="color:#c4a0d4">Tu dashboard financiero personal</p>
+        </div>
+
+        <div class="flex gap-2 mb-5 p-1 rounded-2xl" style="background:#fdf0ff">
+            <button onclick="showTab('login')" id="tabLogin"
+                class="flex-1 py-2 rounded-xl text-sm font-bold transition-all btn-primary">
+                Iniciar sesión
+            </button>
+            <button onclick="showTab('register')" id="tabRegister"
+                class="flex-1 py-2 rounded-xl text-sm font-semibold transition-all"
+                style="color:#b07acc">
+                Registrarse
+            </button>
+        </div>
+
+        <div id="formLogin" class="space-y-3">
+            <input id="loginEmail" type="email" placeholder="tu@email.com"
+                class="w-full px-4 py-3 text-sm">
+            <input id="loginPassword" type="password" placeholder="Contraseña"
+                class="w-full px-4 py-3 text-sm"
+                onkeydown="if(event.key==='Enter')login()">
+            <button onclick="login()" class="w-full btn-primary py-3 text-sm mt-1">Entrar ✨</button>
+        </div>
+
+        <div id="formRegister" class="space-y-3 hidden">
+            <input id="regEmail" type="email" placeholder="tu@email.com"
+                class="w-full px-4 py-3 text-sm">
+            <input id="regPassword" type="password" placeholder="Contraseña (mín. 6 caracteres)"
+                class="w-full px-4 py-3 text-sm"
+                onkeydown="if(event.key==='Enter')register()">
+            <button onclick="register()" class="w-full btn-primary py-3 text-sm mt-1">Crear cuenta 🌷</button>
+        </div>
+
+        <div id="authMsg" class="mt-4 text-center text-sm hidden py-2 px-3 rounded-xl"></div>
+    </div>
+</div>
+
+<!-- ══════════════════ DASHBOARD ══════════════════ -->
+<div id="dashboard" class="hidden fade-in">
+
+    <!-- Header -->
+    <header class="header-bg sticky top-0 z-50 px-5 py-3">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🌸</span>
+                <h1 class="text-lg font-extrabold" style="color:#c054a0">Mis Gastos</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="headerEmail" class="text-xs hidden sm:block" style="color:#c4a0d4"></span>
+                <button onclick="logout()" class="btn-soft px-4 py-1.5 text-sm">Salir</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6 space-y-5">
+
+        <!-- ── Cards resumen ── -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="card card-pink p-5 transition-transform hover:-translate-y-1">
+                <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#d470aa">Este mes</p>
+                <p id="cardTotal" class="text-2xl font-extrabold" style="color:#9b3a7a">$0.00</p>
+                <p id="cardMes" class="text-xs mt-1" style="color:#d470aa"></p>
+            </div>
+            <div class="card card-lila p-5 transition-transform hover:-translate-y-1">
+                <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#8b5cf6">Promedio/día</p>
+                <p id="cardPromedio" class="text-2xl font-extrabold" style="color:#6d28d9">$0.00</p>
+                <p class="text-xs mt-1" style="color:#8b5cf6">Días transcurridos</p>
+            </div>
+            <div class="card card-peach p-5 transition-transform hover:-translate-y-1">
+                <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#e07040">Mayor categoría</p>
+                <p id="cardCategoria" class="text-xl font-extrabold" style="color:#b85030">—</p>
+                <p id="cardCategoriaPct" class="text-xs mt-1" style="color:#e07040"></p>
+            </div>
+            <div class="card card-mint p-5 transition-transform hover:-translate-y-1">
+                <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#10b981">Registros</p>
+                <p id="cardRegistros" class="text-2xl font-extrabold" style="color:#065f46">0</p>
+                <p class="text-xs mt-1" style="color:#10b981">Este mes</p>
+            </div>
+        </div>
+
+        <!-- ── Gráficos ── -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="card p-6">
+                <h3 class="text-sm font-bold uppercase tracking-wider mb-4" style="color:#c084fc">Por categoría 🎀</h3>
+                <div style="height:220px; position:relative">
+                    <canvas id="pieChart"></canvas>
+                    <div id="pieEmpty" class="absolute inset-0 flex items-center justify-center text-sm hidden" style="color:#d0b0e0">Sin datos aún</div>
+                </div>
+            </div>
+            <div class="card p-6">
+                <h3 class="text-sm font-bold uppercase tracking-wider mb-4" style="color:#f472b6">Últimos 7 días 📅</h3>
+                <div style="height:220px; position:relative">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Formulario ── -->
+        <div class="card p-6">
+            <h3 class="text-sm font-bold uppercase tracking-wider mb-4" style="color:#c054a0">+ Nuevo gasto 💸</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <input type="date" id="inFecha" class="sm:col-span-1 px-4 py-3 text-sm">
+                <select id="inCategoria" class="px-4 py-3 text-sm">
+                    <option value="">Categoría…</option>
+                    <option value="Comida">🍔 Comida</option>
+                    <option value="Transporte">🚌 Transporte</option>
+                    <option value="Servicios">💡 Servicios</option>
+                    <option value="Salud">💊 Salud</option>
+                    <option value="Entretenimiento">🎮 Entretenimiento</option>
+                    <option value="Ropa">👗 Ropa</option>
+                    <option value="Educación">📚 Educación</option>
+                    <option value="Hogar">🏠 Hogar</option>
+                    <option value="Ahorro">🏦 Ahorro</option>
+                    <option value="Belleza">💄 Belleza</option>
+                    <option value="Otros">🎀 Otros</option>
+                </select>
+                <input type="number" id="inMonto" placeholder="Monto S/" step="0.01" min="0.01"
+                    class="px-4 py-3 text-sm"
+                    onkeydown="if(event.key==='Enter')agregarGasto()">
+                <input type="text" id="inDesc" placeholder="Descripción (opcional)"
+                    class="col-span-2 sm:col-span-3 lg:col-span-2 px-4 py-3 text-sm"
+                    onkeydown="if(event.key==='Enter')agregarGasto()">
+                <button onclick="agregarGasto()" class="col-span-2 sm:col-span-1 btn-primary py-3 text-sm">
+                    Guardar 🌷
+                </button>
+            </div>
+            <div id="formMsg" class="mt-3 text-xs hidden py-2 px-3 rounded-xl inline-block"></div>
+        </div>
+
+        <!-- ── Historial ── -->
+        <div class="card p-6">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
+                <h3 class="text-sm font-bold uppercase tracking-wider" style="color:#c054a0">Historial 📋</h3>
+                <div class="flex gap-2">
+                    <select id="filtroMes" onchange="cargarGastos()" class="px-3 py-2 text-xs">
+                        <option value="">Todos los meses</option>
+                    </select>
+                    <button onclick="exportarCSV()" class="btn-soft px-3 py-2 text-xs">↓ CSV</button>
+                </div>
+            </div>
+
+            <!-- Mobile -->
+            <div id="mobileList" class="space-y-2 sm:hidden"></div>
+
+            <!-- Desktop -->
+            <div class="hidden sm:block overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-xs font-bold uppercase tracking-wider border-b divider" style="color:#d4a0c8">
+                            <th class="pb-3 text-left">Fecha</th>
+                            <th class="pb-3 text-left">Categoría</th>
+                            <th class="pb-3 text-left">Descripción</th>
+                            <th class="pb-3 text-right">Monto</th>
+                            <th class="pb-3 w-8"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaBody" class="divide-y divider"></tbody>
+                </table>
+            </div>
+
+            <div id="emptyState" class="text-center py-12 hidden">
+                <div class="text-4xl mb-3">🌸</div>
+                <p class="text-sm font-semibold" style="color:#d4a0c8">No hay gastos registrados aún</p>
+                <p class="text-xs mt-1" style="color:#e0c0d8">Agregá tu primer gasto arriba</p>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+</div><!-- /bg-main -->
+
+<script>
+const { createClient } = supabase;
+const sb = createClient(
+    'https://zthbhhdpxqqkykrttkjx.supabase.co',
+    'sb_publishable_lC4xFArQXc5-HEksiXw4Aw__qVaadaM'
+);
+
+let gastos = [];
+let chartPie = null, chartBar = null;
+
+const CAT_COLORS = {
+    'Comida':          '#ffb3ba',
+    'Transporte':      '#aec6ff',
+    'Servicios':       '#fff0a0',
+    'Salud':           '#ffb3c6',
+    'Entretenimiento': '#d4b8ff',
+    'Ropa':            '#ffcce0',
+    'Educación':       '#b3e8ff',
+    'Hogar':           '#b8f0d4',
+    'Ahorro':          '#a8f0e0',
+    'Belleza':         '#ffb8d8',
+    'Otros':           '#e8d4f0',
+};
+
+const CAT_TEXT = {
+    'Comida':          '#c0505a',
+    'Transporte':      '#3060c0',
+    'Servicios':       '#806000',
+    'Salud':           '#c04060',
+    'Entretenimiento': '#6040b0',
+    'Ropa':            '#c04080',
+    'Educación':       '#2080b0',
+    'Hogar':           '#2080588',
+    'Ahorro':          '#206858',
+    'Belleza':         '#c04878',
+    'Otros':           '#806090',
+};
+
+// ── AUTH ──────────────────────────────────────────────────────────
+async function login() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPassword').value;
+    if (!email || !pass) return authMsg('Completá todos los campos 💕', 'err');
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) authMsg(
+        error.message.includes('Invalid login') ? 'Email o contraseña incorrectos 🙈' : error.message, 'err'
+    );
+}
+
+async function register() {
+    const email = document.getElementById('regEmail').value.trim();
+    const pass  = document.getElementById('regPassword').value;
+    if (!email || !pass) return authMsg('Completá todos los campos 💕', 'err');
+    if (pass.length < 6) return authMsg('La contraseña necesita mínimo 6 caracteres 🔒', 'err');
+    const { error } = await sb.auth.signUp({ email, password: pass });
+    if (error) return authMsg(error.message, 'err');
+    authMsg('¡Cuenta creada! Revisá tu email para confirmar 🌸', 'ok');
+}
+
+async function logout() { await sb.auth.signOut(); }
+
+function authMsg(msg, type) {
+    const el = document.getElementById('authMsg');
+    el.textContent = msg;
+    el.className = `mt-4 text-center text-sm py-2 px-3 rounded-xl ${
+        type === 'err'
+        ? 'text-pink-600 bg-pink-50 border border-pink-200'
+        : 'text-purple-600 bg-purple-50 border border-purple-200'
+    }`;
+    el.classList.remove('hidden');
+}
+
+function showTab(tab) {
+    const isLogin = tab === 'login';
+    document.getElementById('formLogin').classList.toggle('hidden', !isLogin);
+    document.getElementById('formRegister').classList.toggle('hidden', isLogin);
+    document.getElementById('tabLogin').className    = `flex-1 py-2 rounded-xl text-sm font-bold transition-all ${isLogin  ? 'btn-primary' : ''}`;
+    document.getElementById('tabRegister').className = `flex-1 py-2 rounded-xl text-sm font-semibold transition-all ${!isLogin ? 'btn-primary' : ''}`;
+    if (!isLogin) document.getElementById('tabRegister').style.color = '';
+    if (isLogin)  document.getElementById('tabLogin').style.color = '';
+    document.getElementById('authMsg').classList.add('hidden');
+}
+
+// ── SESSION ───────────────────────────────────────────────────────
+sb.auth.onAuthStateChange((_e, session) => {
+    if (session?.user) {
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        document.getElementById('headerEmail').textContent = session.user.email;
+        initDashboard();
+    } else {
+        document.getElementById('authScreen').classList.remove('hidden');
+        document.getElementById('dashboard').classList.add('hidden');
+        if (chartPie) { chartPie.destroy(); chartPie = null; }
+        if (chartBar) { chartBar.destroy(); chartBar = null; }
+    }
+});
+
+// ── DASHBOARD ─────────────────────────────────────────────────────
+function initDashboard() {
+    document.getElementById('inFecha').value = today();
+    document.getElementById('cardMes').textContent =
+        new Date().toLocaleDateString('es', { month: 'long', year: 'numeric' });
+    buildMonthFilter();
+    cargarGastos();
+}
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
+function buildMonthFilter() {
+    const sel = document.getElementById('filtroMes');
+    while (sel.options.length > 1) sel.remove(1);
+    const now = new Date();
+    for (let i = 0; i < 13; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        const label = d.toLocaleDateString('es', { month: 'long', year: 'numeric' });
+        const opt = new Option(label, val);
+        if (i === 0) opt.selected = true;
+        sel.appendChild(opt);
+    }
+}
+
+async function cargarGastos() {
+    const mes = document.getElementById('filtroMes').value;
+    let q = sb.from('gastos').select('*')
+        .order('fecha', { ascending: false })
+        .order('created_at', { ascending: false });
+
+    if (mes) {
+        const [y, m] = mes.split('-').map(Number);
+        const desde = `${y}-${String(m).padStart(2,'0')}-01`;
+        const nm = m === 12 ? 1 : m + 1;
+        const ny = m === 12 ? y + 1 : y;
+        const hasta = `${ny}-${String(nm).padStart(2,'0')}-01`;
+        q = q.gte('fecha', desde).lt('fecha', hasta);
+    }
+
+    const { data, error } = await q;
+    if (error) { console.error(error); return; }
+    gastos = data || [];
+    render();
+}
+
+async function agregarGasto() {
+    const fecha     = document.getElementById('inFecha').value;
+    const categoria = document.getElementById('inCategoria').value;
+    const monto     = parseFloat(document.getElementById('inMonto').value);
+    const desc      = document.getElementById('inDesc').value.trim();
+
+    if (!fecha || !categoria || !monto || monto <= 0)
+        return showFormMsg('Completá fecha, categoría y monto 💕', 'err');
+
+    const { data: { user } } = await sb.auth.getUser();
+    const { error } = await sb.from('gastos').insert({
+        user_id: user.id, fecha, categoria, monto, descripcion: desc || null
+    });
+
+    if (error) return showFormMsg('Error: ' + error.message, 'err');
+
+    document.getElementById('inMonto').value = '';
+    document.getElementById('inDesc').value  = '';
+    showFormMsg('¡Guardado! 🌸', 'ok');
+    setTimeout(() => document.getElementById('formMsg').classList.add('hidden'), 2000);
+    cargarGastos();
+}
+
+async function eliminarGasto(id) {
+    if (!confirm('¿Eliminar este gasto? 🗑️')) return;
+    await sb.from('gastos').delete().eq('id', id);
+    cargarGastos();
+}
+
+function showFormMsg(msg, type) {
+    const el = document.getElementById('formMsg');
+    el.textContent = msg;
+    el.className = `mt-3 text-xs py-2 px-3 rounded-xl inline-block ${
+        type === 'err'
+        ? 'text-pink-600 bg-pink-50 border border-pink-200'
+        : 'text-purple-600 bg-purple-50 border border-purple-200'
+    }`;
+    el.classList.remove('hidden');
+}
+
+// ── RENDER ────────────────────────────────────────────────────────
+function render() {
+    renderCards();
+    renderTabla();
+    renderCharts();
+}
+
+function renderCards() {
+    const total   = gastos.reduce((s,g) => s + Number(g.monto), 0);
+    const diasMes = new Date().getDate();
+
+    document.getElementById('cardTotal').textContent    = fmt(total);
+    document.getElementById('cardPromedio').textContent = fmt(total / diasMes);
+    document.getElementById('cardRegistros').textContent = gastos.length;
+
+    const bycat = groupBy(gastos);
+    const top   = Object.entries(bycat).sort((a,b) => b[1]-a[1])[0];
+    if (top) {
+        document.getElementById('cardCategoria').textContent    = top[0];
+        document.getElementById('cardCategoriaPct').textContent =
+            total > 0 ? `${Math.round(top[1]/total*100)}% del total` : '';
+    } else {
+        document.getElementById('cardCategoria').textContent    = '—';
+        document.getElementById('cardCategoriaPct').textContent = '';
+    }
+}
+
+function renderTabla() {
+    const tbody  = document.getElementById('tablaBody');
+    const mobile = document.getElementById('mobileList');
+    const empty  = document.getElementById('emptyState');
+
+    if (!gastos.length) {
+        tbody.innerHTML = mobile.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+    }
+    empty.classList.add('hidden');
+
+    tbody.innerHTML = gastos.map(g => `
+        <tr class="row-hover transition-colors group">
+            <td class="py-3 pr-4 text-sm" style="color:#b080c0">${fmtFecha(g.fecha)}</td>
+            <td class="py-3 pr-4">
+                <span class="tag" style="background:${CAT_COLORS[g.categoria]||'#f0e0f8'}; color:${CAT_TEXT[g.categoria]||'#806090'}">
+                    ${g.categoria}
+                </span>
+            </td>
+            <td class="py-3 pr-4 text-sm" style="color:#c4a0c8">${g.descripcion || '—'}</td>
+            <td class="py-3 text-right font-bold" style="color:#9b3a7a">${fmt(g.monto)}</td>
+            <td class="py-3 pl-3 text-right">
+                <button onclick="eliminarGasto('${g.id}')"
+                    class="text-transparent group-hover:text-pink-300 hover:!text-pink-500 transition-colors text-xl leading-none">×</button>
+            </td>
+        </tr>
+    `).join('');
+
+    mobile.innerHTML = gastos.map(g => `
+        <div class="rounded-2xl p-4 flex justify-between items-start gap-3"
+            style="background:white; border:1.5px solid #f3d6f0;">
+            <div class="min-w-0">
+                <span class="tag" style="background:${CAT_COLORS[g.categoria]||'#f0e0f8'}; color:${CAT_TEXT[g.categoria]||'#806090'}">
+                    ${g.categoria}
+                </span>
+                <p class="text-xs mt-1.5 truncate" style="color:#c4a0c8">
+                    ${fmtFecha(g.fecha)}${g.descripcion ? ' · ' + g.descripcion : ''}
+                </p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="font-bold" style="color:#9b3a7a">${fmt(g.monto)}</span>
+                <button onclick="eliminarGasto('${g.id}')"
+                    class="text-pink-300 hover:text-pink-500 transition-colors text-xl leading-none">×</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderCharts() {
+    const bycat  = groupBy(gastos);
+    const labels = Object.keys(bycat);
+    const values = Object.values(bycat);
+    const bgColors = labels.map(l => CAT_COLORS[l] || '#f0e0f8');
+
+    document.getElementById('pieEmpty').classList.toggle('hidden', labels.length > 0);
+
+    if (chartPie) chartPie.destroy();
+    chartPie = new Chart(document.getElementById('pieChart'), {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data: values, backgroundColor: bgColors, borderWidth: 2, borderColor: 'white', hoverOffset: 6 }] },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '62%',
+            plugins: {
+                legend: { position: 'right', labels: { font: { size: 11, family: 'Nunito' }, padding: 10, boxWidth: 10, boxHeight: 10, color: '#b080c0' } },
+                tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${fmt(ctx.raw)}` }, bodyFont: { family: 'Nunito' } }
+            }
+        }
+    });
+
+    const now  = new Date();
+    const days = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(now); d.setDate(now.getDate() - (6 - i));
+        return d.toISOString().split('T')[0];
+    });
+    const dayTotals = days.map(d => gastos.filter(g => g.fecha === d).reduce((s,g) => s+Number(g.monto), 0));
+
+    if (chartBar) chartBar.destroy();
+    chartBar = new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+            labels: days.map(d => new Date(d+'T12:00').toLocaleDateString('es', { weekday:'short', day:'numeric' })),
+            datasets: [{
+                data: dayTotals,
+                backgroundColor: dayTotals.map((_, i) => i === 6 ? '#f9a8d4' : '#ddd6fe'),
+                borderColor:     dayTotals.map((_, i) => i === 6 ? '#f472b6' : '#a78bfa'),
+                borderWidth: 1.5,
+                borderRadius: 8,
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw)}` }, bodyFont: { family: 'Nunito' } }
+            },
+            scales: {
+                x: { grid: { color: '#f3d6f0' }, ticks: { color: '#c4a0c8', font: { size: 10, family: 'Nunito' } } },
+                y: { grid: { color: '#f3d6f0' }, ticks: { color: '#c4a0c8', font: { size: 10, family: 'Nunito' }, callback: v => 'S/ '+v } }
+            }
+        }
+    });
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────
+function groupBy(arr) {
+    return arr.reduce((acc, g) => {
+        acc[g.categoria] = (acc[g.categoria] || 0) + Number(g.monto);
+        return acc;
+    }, {});
+}
+
+function fmt(val) {
+    return 'S/ ' + Number(val).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtFecha(f) {
+    return new Date(f+'T12:00').toLocaleDateString('es', { day:'2-digit', month:'short', year:'2-digit' });
+}
+
+function exportarCSV() {
+    if (!gastos.length) return alert('No hay gastos para exportar 🌸');
+    const rows = [
+        ['Fecha','Categoría','Monto','Descripción'],
+        ...gastos.map(g => [g.fecha, g.categoria, Number(g.monto).toFixed(2), g.descripcion || ''])
+    ];
+    const csv  = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+    const blob = new Blob(['﻿'+csv], { type: 'text/csv;charset=utf-8;' });
+    const a    = Object.assign(document.createElement('a'), {
+        href: URL.createObjectURL(blob),
+        download: `gastos_${today().slice(0,7)}.csv`
+    });
+    a.click();
+}
+</script>
+</body>
+</html>
