@@ -443,7 +443,7 @@
         </div>
 
         <!-- Lista de tarjetas -->
-        <div id="tarjetasGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <div id="tarjetasGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         <div id="tarjetasEmpty" class="card p-10 text-center hidden">
             <div class="text-4xl mb-3">💳</div>
             <p class="text-sm font-semibold" style="color:#d4a0c8">No tenés tarjetas registradas</p>
@@ -1040,13 +1040,13 @@ async function agregarTarjeta() {
     const deuda   = deudaV ? parseFloat(deudaV) : null;
     if (!nombre || !dia || dia<1 || dia>31) return showMsg('tarMsg','Completá nombre y día de vencimiento 💕','err');
     const { data:{user} } = await sb.auth.getUser();
-    const { error } = await sb.from('tarjetas').insert({user_id:user.id, nombre, dia_vencimiento:dia, deuda_mes:deuda});
-    if (error) return showMsg('tarMsg','Error: '+error.message,'err');
+    const { error } = await sb.from('tarjetas').insert({user_id:user.id, nombre, dia_vencimiento:dia, deuda_mes:deuda, color:'#c4b5fd'});
+    if (error) return showMsg('tarMsg','Error al guardar: '+error.message,'err');
     document.getElementById('tarNombre').value = '';
     document.getElementById('tarDia').value    = '';
     document.getElementById('tarDeuda').value  = '';
     showMsg('tarMsg','¡Tarjeta agregada! 💳','ok');
-    setTimeout(()=>document.getElementById('tarMsg').classList.add('hidden'),2000);
+    setTimeout(()=>document.getElementById('tarMsg').classList.add('hidden'),3000);
     cargarTarjetas();
 }
 function editarDeuda(id, actual) {
@@ -1178,55 +1178,50 @@ function renderTarjetas() {
             </div>
 
             <!-- Info pago -->
-            <div style="padding:10px 12px;display:flex;flex-direction:column;gap:7px;flex:1;">
+            <div style="padding:10px 12px;display:flex;flex-direction:column;gap:6px;flex:1;">
 
-                <!-- Fila deuda del mes -->
+                <!-- Deuda + barra -->
                 <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <div>
-                        <p style="color:#9b59c7;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:1px;">Deuda del mes</p>
-                        <p style="color:#5a3d6b;font-size:13px;font-weight:800;">${deuda > 0 ? fmt(deuda) : '—'}</p>
-                    </div>
-                    <button onclick="editarDeuda('${t.id}',${deuda||''})" style="background:#f9f0ff;border:1px solid #e0c8ff;color:#9b59c7;border-radius:8px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;">
-                        ${deuda > 0 ? '✏️ Editar' : '+ Agregar'}
+                    <span style="color:#9b59c7;font-size:9px;font-weight:700;text-transform:uppercase;">
+                        ${deuda > 0 ? `Deuda: ${fmt(deuda)}` : 'Sin deuda configurada'}
+                    </span>
+                    <button onclick="editarDeuda('${t.id}',${deuda||''})" style="background:#f9f0ff;border:1px solid #e0c8ff;color:#9b59c7;border-radius:7px;padding:2px 8px;font-size:9px;font-weight:700;cursor:pointer;">
+                        ${deuda > 0 ? 'Editar' : '+ Agregar'}
                     </button>
                 </div>
-
-                <!-- Barra de progreso -->
                 ${deuda > 0 ? `
                     <div>
-                        <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
-                            <span style="color:#c4a0c8;font-size:9px;">Pagado: ${fmt(gastadoMes)}</span>
-                            <span style="color:#c4a0c8;font-size:9px;">${Math.round(deudaPct)}%</span>
-                        </div>
                         <div style="height:5px;background:#f3d6f0;border-radius:20px;overflow:hidden;">
                             <div style="height:100%;width:${deudaPct}%;background:${deudaColor};border-radius:20px;transition:width 1s ease;"></div>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;margin-top:2px;">
+                            <span style="color:#c4a0c8;font-size:9px;">Pagado: ${fmt(gastadoMes)}</span>
+                            <span style="color:#c4a0c8;font-size:9px;">${Math.round(deudaPct)}%</span>
                         </div>
                     </div>
                 ` : ''}
 
-                <!-- Estado pago -->
-                ${pagado ? `
-                    <div style="background:#f0fdf4;border-radius:10px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center;margin-top:auto;">
-                        <div>
-                            <p style="color:#059669;font-size:8px;font-weight:800;text-transform:uppercase;">✅ Pagado este mes</p>
-                            <p style="color:#065f46;font-size:15px;font-weight:800;margin-top:1px;">${fmt(gastadoMes)}</p>
+                <!-- Estado + botón -->
+                <div style="margin-top:auto;">
+                    ${pagado ? `
+                        <div style="background:#f0fdf4;border-radius:8px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <p style="color:#059669;font-size:8px;font-weight:800;text-transform:uppercase;">✅ Pagado este mes</p>
+                                <p style="color:#065f46;font-size:14px;font-weight:800;">${fmt(gastadoMes)}</p>
+                            </div>
+                            <p style="color:#6ee7b7;font-size:9px;">${pagoMes ? fmtFecha(pagoMes.fecha) : ''}</p>
                         </div>
-                        <p style="color:#6ee7b7;font-size:10px;">${pagoMes ? fmtFecha(pagoMes.fecha) : ''}</p>
-                    </div>
-                ` : `
-                    <div style="margin-top:auto;">
-                        <div style="background:${urgente?'#fff1f2':'#f8f4ff'};border-radius:8px;padding:5px 10px;margin-bottom:6px;border:1px solid ${urgente?'#fecaca':'#ede9fe'};">
-                            <p style="color:${urgente?'#ef4444':'#7c3aed'};font-size:10px;font-weight:700;">
-                                ${urgente?'⚠️ Vence pronto — ':'⏳ '}${diasFalta===0?'¡Vence hoy!':diasFalta===1?'Vence mañana':`Faltan ${diasFalta} días`}
-                            </p>
+                    ` : `
+                        <div style="background:${urgente?'#fff1f2':'#f8f4ff'};border-radius:7px;padding:5px 9px;margin-bottom:6px;border:1px solid ${urgente?'#fecaca':'#ede9fe'};">
+                            <p style="color:${urgente?'#ef4444':'#7c3aed'};font-size:10px;font-weight:700;">${urgente?'⚠️ Vence pronto — ':'⏳ '}${diasFalta===0?'¡Vence hoy!':diasFalta===1?'Vence mañana':`Faltan ${diasFalta} días`}</p>
                         </div>
                         <button onclick="openPagoModal('${t.nombre.replace(/'/g,"\\'")}')"
-                            style="width:100%;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:white;border:none;border-radius:10px;padding:7px;font-weight:700;font-size:12px;cursor:pointer;"
+                            style="width:100%;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:white;border:none;border-radius:9px;padding:6px;font-weight:700;font-size:11px;cursor:pointer;"
                             onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                             Registrar pago 💳
                         </button>
-                    </div>
-                `}
+                    `}
+                </div>
             </div>
         </div>`;
     }).join('');
