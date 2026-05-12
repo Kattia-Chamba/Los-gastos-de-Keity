@@ -10,41 +10,179 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap');
         * { font-family: 'Nunito', system-ui, sans-serif; }
-        body { background: #fdf4fb; }
-        .bg-main { background: linear-gradient(135deg, #fdf4fb 0%, #f0ebff 50%, #fce4f3 100%); min-height: 100vh; }
-        .card { background: white; border-radius: 20px; box-shadow: 0 4px 24px rgba(200,130,200,0.1); border: 1.5px solid #f3d6f0; }
+        body { background: #fdf4fb; overflow-x: hidden; }
+
+        /* ── Fondo animado ── */
+        .bg-main {
+            background: linear-gradient(135deg, #fdf4fb 0%, #f0ebff 50%, #fce4f3 100%);
+            min-height: 100vh;
+            position: relative;
+        }
+        .bg-main::before {
+            content: '';
+            position: fixed; inset: 0; z-index: 0; pointer-events: none;
+            background:
+                radial-gradient(ellipse at 20% 20%, rgba(244,114,182,0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(192,132,252,0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(167,139,250,0.07) 0%, transparent 60%);
+            animation: bgPulse 8s ease-in-out infinite alternate;
+        }
+        @keyframes bgPulse {
+            0%   { opacity: 0.6; transform: scale(1); }
+            100% { opacity: 1;   transform: scale(1.05); }
+        }
+
+        /* Burbujas flotantes */
+        .bubble {
+            position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(244,114,182,0.2));
+            animation: floatBubble linear infinite;
+        }
+        @keyframes floatBubble {
+            0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+            10%  { opacity: 0.6; }
+            90%  { opacity: 0.3; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(200,130,200,0.12);
+            border: 1.5px solid rgba(243,214,240,0.8);
+            position: relative; z-index: 1;
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+        .card:hover { box-shadow: 0 8px 32px rgba(200,130,200,0.22); }
         .card-pink  { background: linear-gradient(135deg,#fce4f3,#f9d0ec); border:1.5px solid #f7bde8; }
         .card-lila  { background: linear-gradient(135deg,#ede9ff,#ddd5ff); border:1.5px solid #c9bfff; }
         .card-mint  { background: linear-gradient(135deg,#e0fdf4,#ccfbf1); border:1.5px solid #a7f3d0; }
         .card-peach { background: linear-gradient(135deg,#fff0e6,#ffe4cc); border:1.5px solid #fdd0aa; }
-        .btn-primary { background: linear-gradient(135deg,#f472b6,#c084fc); color:white; font-weight:700; border-radius:14px; transition:all 0.2s; box-shadow:0 4px 15px rgba(196,132,252,0.35); }
-        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(196,132,252,0.45); }
+
+        /* ── Botones ── */
+        .btn-primary {
+            background: linear-gradient(135deg,#f472b6,#c084fc);
+            color:white; font-weight:700; border-radius:14px;
+            transition:all 0.2s; box-shadow:0 4px 15px rgba(196,132,252,0.35);
+            position: relative; overflow: hidden;
+        }
+        .btn-primary::after {
+            content:''; position:absolute; inset:0; border-radius:14px;
+            background: linear-gradient(135deg,rgba(255,255,255,0.2),transparent);
+            opacity:0; transition:opacity 0.2s;
+        }
+        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(196,132,252,0.5); }
+        .btn-primary:hover::after { opacity:1; }
+        .btn-primary:active { transform:scale(0.97); }
         .btn-soft { background:#f9f0ff; color:#9b59c7; border:1.5px solid #e0c8ff; border-radius:12px; font-weight:600; transition:all 0.2s; }
-        .btn-soft:hover { background:#f0e0ff; }
+        .btn-soft:hover { background:#f0e0ff; transform:translateY(-1px); }
         .btn-danger { background:#fff0f3; color:#e05070; border:1.5px solid #ffc0cc; border-radius:12px; font-weight:600; transition:all 0.2s; }
         .btn-danger:hover { background:#ffe0e8; }
-        input, select { background:#fdf6ff !important; color:#5a3d6b !important; border:1.5px solid #e8d0f5 !important; border-radius:14px !important; transition:all 0.2s; }
+
+        /* ── Inputs ── */
+        input, select {
+            background:#fdf6ff !important; color:#5a3d6b !important;
+            border:1.5px solid #e8d0f5 !important; border-radius:14px !important; transition:all 0.2s;
+        }
         input::placeholder { color:#c9a8e0 !important; }
-        input:focus, select:focus { outline:none !important; border-color:#c084fc !important; box-shadow:0 0 0 3px rgba(192,132,252,0.15) !important; }
+        input:focus, select:focus {
+            outline:none !important; border-color:#c084fc !important;
+            box-shadow:0 0 0 3px rgba(192,132,252,0.15) !important;
+            transform: scale(1.01);
+        }
         select option { background:#fdf6ff; color:#5a3d6b; }
-        .header-bg { background:white; border-bottom:2px solid #f3d6f0; box-shadow:0 2px 20px rgba(200,130,200,0.08); }
+
+        /* ── Header ── */
+        .header-bg {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid rgba(243,214,240,0.6);
+            box-shadow: 0 2px 20px rgba(200,130,200,0.1);
+            position: relative; z-index: 10;
+        }
+        .logo-text {
+            background: linear-gradient(135deg,#f472b6,#c084fc,#a78bfa);
+            background-size: 200% 200%;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 4s ease infinite;
+        }
+        @keyframes gradientShift {
+            0%   { background-position: 0% 50%; }
+            50%  { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* ── Nav tabs ── */
         .tab-active   { background:linear-gradient(135deg,#f472b6,#c084fc); color:white; box-shadow:0 4px 15px rgba(196,132,252,0.3); }
-        .tab-inactive { background:white; color:#c084fc; border:1.5px solid #e8d0f8; }
+        .tab-inactive { background:rgba(255,255,255,0.9); color:#c084fc; border:1.5px solid #e8d0f8; }
+        .tab-inactive:hover { background:#f9f0ff; transform:translateY(-1px); }
+
+        /* ── Tags ── */
         .tag { border-radius:20px; font-size:11px; font-weight:700; padding:3px 10px; }
+
+        /* ── Progress ── */
         .progress-bar  { height:10px; border-radius:20px; overflow:hidden; background:#f3d6f0; }
-        .progress-fill { height:100%; border-radius:20px; transition:width 0.6s ease; }
-        .fade-in { animation:fadeIn 0.4s ease; }
-        @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .progress-fill {
+            height:100%; border-radius:20px; transition:width 1s cubic-bezier(0.4,0,0.2,1);
+            position: relative; overflow: hidden;
+        }
+        .progress-fill::after {
+            content:''; position:absolute; inset:0;
+            background: linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.4) 50%,transparent 100%);
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
+
+        /* ── Animaciones de entrada ── */
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+        .card-enter { opacity:0; animation: cardEnter 0.5s ease forwards; }
+        @keyframes cardEnter { from{opacity:0;transform:translateY(20px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+        /* Número contando */
+        .num-animate { transition: all 0.8s ease; }
+
+        /* Pulso en alerta */
+        .pulse-border { animation: pulseBorder 2s infinite; }
+        @keyframes pulseBorder { 0%,100%{box-shadow:0 0 0 0 rgba(244,114,182,0.3)} 50%{box-shadow:0 0 0 6px rgba(244,114,182,0)} }
+
+        /* Bounce en emoji */
+        .emoji-bounce { display:inline-block; animation: emojiBounce 2s ease-in-out infinite; }
+        @keyframes emojiBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+        /* ── Scroll ── */
         ::-webkit-scrollbar { width:5px; }
         ::-webkit-scrollbar-track { background:#fdf4fb; }
-        ::-webkit-scrollbar-thumb { background:#e8a8d8; border-radius:4px; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(#f9a8d4,#c084fc); border-radius:4px; }
+
         .row-hover:hover { background:#fdf0fb; }
         .divider { border-color:#f3d6f0; }
-        .modal-bg { background:rgba(100,50,120,0.3); backdrop-filter:blur(4px); }
+        .modal-bg { background:rgba(100,50,120,0.35); backdrop-filter:blur(6px); }
+
+        /* Confetti */
+        .confetti-piece {
+            position:fixed; width:8px; height:8px; border-radius:2px;
+            animation: confettiFall 1.5s ease-in forwards;
+            pointer-events:none; z-index:9999;
+        }
+        @keyframes confettiFall {
+            0%   { transform:translateY(-20px) rotate(0deg); opacity:1; }
+            100% { transform:translateY(100vh) rotate(720deg); opacity:0; }
+        }
+
+        /* Sparkle en guardar */
+        @keyframes sparkle {
+            0%   { transform:scale(0) rotate(0deg); opacity:1; }
+            100% { transform:scale(1.5) rotate(180deg); opacity:0; }
+        }
     </style>
 </head>
 <body>
-<div class="bg-main">
+<div class="bg-main" id="bgMain">
 
 <!-- ══ AUTH ══ -->
 <div id="authScreen" class="min-h-screen flex items-center justify-center p-4">
@@ -78,8 +216,8 @@
     <header class="header-bg sticky top-0 z-50 px-5 py-3">
         <div class="max-w-6xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-2">
-                <span class="text-2xl">🌸</span>
-                <h1 class="text-lg font-extrabold" style="color:#c054a0">Mis Gastos</h1>
+                <span class="text-2xl emoji-bounce">🌸</span>
+                <h1 class="text-lg font-extrabold logo-text">Mis Gastos</h1>
             </div>
             <div class="flex items-center gap-3">
                 <span id="headerEmail" class="text-xs hidden sm:block" style="color:#c4a0d4"></span>
@@ -196,6 +334,7 @@
                     <option value="Hogar">🏠 Hogar</option>
                     <option value="Ahorro">🏦 Ahorro</option>
                     <option value="Belleza">💄 Belleza</option>
+                    <option value="Plan celular">📱 Plan celular</option>
                     <option value="Otros">🎀 Otros</option>
                 </select>
                 <input type="number" id="inMonto" placeholder="Monto S/" step="0.01" min="0.01" class="px-4 py-3 text-sm" onkeydown="if(event.key==='Enter')agregarGasto()">
@@ -275,6 +414,7 @@
                     <option value="Hogar">🏠 Hogar</option>
                     <option value="Ahorro">🏦 Ahorro</option>
                     <option value="Belleza">💄 Belleza</option>
+                    <option value="Plan celular">📱 Plan celular</option>
                     <option value="Otros">🎀 Otros</option>
                 </select>
                 <input type="text" id="recDesc" placeholder="Descripción (ej: Luz)" class="px-4 py-3 text-sm">
@@ -350,13 +490,13 @@ const CAT_COLORS = {
     'Comida':'#ffb3ba','Transporte':'#aec6ff','Servicios':'#fff0a0',
     'Salud':'#ffb3c6','Entretenimiento':'#d4b8ff','Ropa':'#ffcce0',
     'Educación':'#b3e8ff','Hogar':'#b8f0d4','Ahorro':'#a8f0e0',
-    'Belleza':'#ffb8d8','Otros':'#e8d4f0'
+    'Belleza':'#ffb8d8','Plan celular':'#bae6fd','Otros':'#e8d4f0'
 };
 const CAT_TEXT = {
     'Comida':'#c0505a','Transporte':'#3060c0','Servicios':'#806000',
     'Salud':'#c04060','Entretenimiento':'#6040b0','Ropa':'#c04080',
     'Educación':'#2080b0','Hogar':'#208058','Ahorro':'#206858',
-    'Belleza':'#c04878','Otros':'#806090'
+    'Belleza':'#c04878','Plan celular':'#0369a1','Otros':'#806090'
 };
 
 // ── AUTH ──────────────────────────────────────────────────────────
@@ -423,6 +563,7 @@ async function initDashboard() {
     document.getElementById('inFecha').value = today();
     document.getElementById('cardMes').textContent = new Date().toLocaleDateString('es',{month:'long',year:'numeric'});
     buildMonthFilter();
+    spawnBubbles();
     await Promise.all([cargarGastos(), cargarMetas(), cargarRecurrentes(), cargarPresupuesto(), cargarTodosGastos()]);
 }
 
@@ -559,6 +700,7 @@ async function agregarAMeta() {
     const nuevo = Math.min(Number(meta.monto_actual)+amount, Number(meta.monto_meta));
     await sb.from('metas').update({monto_actual:nuevo}).eq('id',id);
     closeModal('modalMeta');
+    if (nuevo >= Number(meta.monto_meta)) lanзarConfetti();
     cargarMetas();
 }
 async function eliminarMeta(id) {
@@ -696,9 +838,9 @@ function renderDashboard() {
 function renderCards() {
     const total  = gastos.reduce((s,g)=>s+Number(g.monto),0);
     const diasM  = new Date().getDate();
-    document.getElementById('cardTotal').textContent     = fmt(total);
-    document.getElementById('cardPromedio').textContent  = fmt(total/diasM);
-    document.getElementById('cardRegistros').textContent = gastos.length;
+    animateNumber(document.getElementById('cardTotal'),    total);
+    animateNumber(document.getElementById('cardPromedio'), total/diasM);
+    animateCount(document.getElementById('cardRegistros'), gastos.length);
     const bycat = groupBy(gastos);
     const top   = Object.entries(bycat).sort((a,b)=>b[1]-a[1])[0];
     document.getElementById('cardCategoria').textContent    = top ? top[0] : '—';
@@ -781,6 +923,78 @@ function renderMonthChart() {
 function groupBy(arr) { return arr.reduce((acc,g)=>{acc[g.categoria]=(acc[g.categoria]||0)+Number(g.monto);return acc;},{}); }
 function fmt(val) { return 'S/ '+Number(val).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtFecha(f) { return new Date(f+'T12:00').toLocaleDateString('es',{day:'2-digit',month:'short',year:'2-digit'}); }
+
+// ── ANIMACIONES ───────────────────────────────────────────────────
+function animateNumber(el, target, prefix='S/ ') {
+    const start    = 0;
+    const duration = 900;
+    const startT   = performance.now();
+    function step(now) {
+        const p   = Math.min((now - startT) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        const val  = start + (target - start) * ease;
+        el.textContent = prefix + val.toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2});
+        if (p < 1) requestAnimationFrame(step);
+        else el.textContent = prefix + target.toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2});
+    }
+    requestAnimationFrame(step);
+}
+
+function animateCount(el, target) {
+    const duration = 700;
+    const startT   = performance.now();
+    function step(now) {
+        const p   = Math.min((now - startT) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * ease);
+        if (p < 1) requestAnimationFrame(step);
+        else el.textContent = target;
+    }
+    requestAnimationFrame(step);
+}
+
+function lanзarConfetti() {
+    const colors = ['#f472b6','#c084fc','#a78bfa','#f9a8d4','#ddd6fe','#fce7f3'];
+    for (let i = 0; i < 40; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti-piece';
+        c.style.cssText = `
+            left:${Math.random()*100}vw;
+            top:0;
+            background:${colors[Math.floor(Math.random()*colors.length)]};
+            animation-delay:${Math.random()*0.5}s;
+            animation-duration:${1+Math.random()*1}s;
+            width:${6+Math.random()*6}px;
+            height:${6+Math.random()*6}px;
+            border-radius:${Math.random()>0.5?'50%':'2px'};
+        `;
+        document.body.appendChild(c);
+        setTimeout(()=>c.remove(), 2500);
+    }
+}
+
+function spawnBubbles() {
+    const bg = document.getElementById('bgMain');
+    for (let i = 0; i < 8; i++) {
+        const b = document.createElement('div');
+        b.className = 'bubble';
+        const size = 20 + Math.random() * 60;
+        b.style.cssText = `
+            width:${size}px; height:${size}px;
+            left:${Math.random()*100}vw;
+            animation-duration:${12+Math.random()*20}s;
+            animation-delay:${Math.random()*15}s;
+            opacity:0.4;
+        `;
+        bg.appendChild(b);
+    }
+}
+
+function staggerCards() {
+    document.querySelectorAll('.card-enter').forEach((el, i) => {
+        el.style.animationDelay = `${i * 0.08}s`;
+    });
+}
 function showMsg(id, msg, type) {
     const el = document.getElementById(id);
     el.textContent = msg;
