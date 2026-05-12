@@ -436,7 +436,7 @@
                     <option value="Oh!">💳 Oh! Visa (Financiera Oh!)</option>
                 </select>
                 <input type="number" id="tarDia" placeholder="Día de vencimiento (1-31)" min="1" max="31" class="px-4 py-3 text-sm">
-                <input type="number" id="tarLimite" placeholder="Límite de crédito S/ (opcional)" step="0.01" min="0" class="px-4 py-3 text-sm">
+                <input type="number" id="tarDeuda" placeholder="Deuda del mes S/ (opcional)" step="0.01" min="0" class="px-4 py-3 text-sm">
                 <button onclick="agregarTarjeta()" class="btn-primary py-3 text-sm">Agregar 💳</button>
             </div>
             <div id="tarMsg" class="mt-3 text-xs hidden py-2 px-3 rounded-xl inline-block"></div>
@@ -527,6 +527,20 @@
         <div class="flex gap-2">
             <button onclick="confirmarPagoTarjeta()" class="flex-1 btn-primary py-2.5 text-sm">Registrar 💳</button>
             <button onclick="closeModal('modalPagoTarjeta')" class="flex-1 btn-soft py-2.5 text-sm">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL Deuda del mes -->
+<div id="modalDeuda" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-bg" style="display:none">
+    <div class="card p-6 w-full max-w-sm fade-in">
+        <h3 id="modalDeudaTitle" class="text-base font-bold mb-1" style="color:#c054a0">💳 Deuda del mes</h3>
+        <p class="text-xs mb-4" style="color:#d4a0c8">¿Cuánto te cobra el banco este mes? (puede incluir cuotas, intereses, etc.)</p>
+        <input type="number" id="modalDeudaMonto" placeholder="Monto S/" step="0.01" min="0.01" class="w-full px-4 py-3 text-sm mb-3">
+        <input type="hidden" id="modalDeudaId">
+        <div class="flex gap-2">
+            <button onclick="guardarDeuda()" class="flex-1 btn-primary py-2.5 text-sm">Guardar 💳</button>
+            <button onclick="closeModal('modalDeuda')" class="flex-1 btn-soft py-2.5 text-sm">Cancelar</button>
         </div>
     </div>
 </div>
@@ -1021,17 +1035,32 @@ async function cargarTarjetas() {
 async function agregarTarjeta() {
     const nombre  = document.getElementById('tarNombre').value.trim();
     const dia     = parseInt(document.getElementById('tarDia').value);
-    const limVal  = document.getElementById('tarLimite').value;
-    const limite  = limVal ? parseFloat(limVal) : null;
+    const deudaV  = document.getElementById('tarDeuda').value;
+    const deuda   = deudaV ? parseFloat(deudaV) : null;
     if (!nombre || !dia || dia<1 || dia>31) return showMsg('tarMsg','Completá nombre y día de vencimiento 💕','err');
     const { data:{user} } = await sb.auth.getUser();
-    const { error } = await sb.from('tarjetas').insert({user_id:user.id, nombre, dia_vencimiento:dia, limite_credito:limite});
+    const { error } = await sb.from('tarjetas').insert({user_id:user.id, nombre, dia_vencimiento:dia, deuda_mes:deuda});
     if (error) return showMsg('tarMsg','Error: '+error.message,'err');
-    document.getElementById('tarNombre').value  = '';
-    document.getElementById('tarDia').value     = '';
-    document.getElementById('tarLimite').value  = '';
+    document.getElementById('tarNombre').value = '';
+    document.getElementById('tarDia').value    = '';
+    document.getElementById('tarDeuda').value  = '';
     showMsg('tarMsg','¡Tarjeta agregada! 💳','ok');
     setTimeout(()=>document.getElementById('tarMsg').classList.add('hidden'),2000);
+    cargarTarjetas();
+}
+function editarDeuda(id, actual) {
+    document.getElementById('modalDeudaId').value    = id;
+    document.getElementById('modalDeudaMonto').value = actual || '';
+    const t = tarjetas.find(x=>x.id===id);
+    document.getElementById('modalDeudaTitle').textContent = t ? `Deuda de ${t.nombre}` : 'Deuda del mes';
+    openModal('modalDeuda');
+}
+async function guardarDeuda() {
+    const id    = document.getElementById('modalDeudaId').value;
+    const monto = parseFloat(document.getElementById('modalDeudaMonto').value);
+    if (!monto || monto <= 0) return;
+    await sb.from('tarjetas').update({deuda_mes: monto}).eq('id', id);
+    closeModal('modalDeuda');
     cargarTarjetas();
 }
 async function eliminarTarjeta(id) {
@@ -1124,9 +1153,9 @@ function renderTarjetas() {
             ? t.dia_vencimiento - diaHoy
             : Math.ceil((new Date(hoy.getFullYear(), hoy.getMonth()+1, t.dia_vencimiento) - hoy) / 86400000);
         const urgente     = !pagado && diasFalta <= 5;
-        const limite      = t.limite_credito ? Number(t.limite_credito) : 0;
-        const limitePct   = limite > 0 ? Math.min(gastadoMes/limite*100, 100) : 0;
-        const limiteColor = limitePct > 80 ? 'linear-gradient(90deg,#fca5a5,#ef4444)' : limitePct > 60 ? 'linear-gradient(90deg,#fde68a,#f59e0b)' : 'linear-gradient(90deg,#a78bfa,#ec4899)';
+        const deuda       = t.deuda_mes ? Number(t.deuda_mes) : 0;
+        const deudaPct    = deuda > 0 ? Math.min(gastadoMes/deuda*100, 100) : 0;
+        const deudaColor  = deudaPct >= 100 ? 'linear-gradient(90deg,#86efac,#34d399)' : deudaPct >= 50 ? 'linear-gradient(90deg,#fde68a,#f59e0b)' : 'linear-gradient(90deg,#fca5a5,#ef4444)';
 
         return `<div class="card card-enter" style="animation-delay:${i*0.1}s;overflow:hidden;${urgente?'animation:pulseBorder 2s infinite;':''}">
 
@@ -1153,17 +1182,21 @@ function renderTarjetas() {
 
             <!-- Info pago -->
             <div style="padding:14px 16px;">
-                ${limite > 0 ? `
-                    <div style="margin-bottom:10px;">
-                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                            <span style="color:#8b5cf6;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Usado este mes</span>
-                            <span style="color:#5a3d6b;font-size:10px;font-weight:700;">${fmt(gastadoMes)} / ${fmt(limite)}</span>
-                        </div>
-                        <div style="height:6px;background:#f3d6f0;border-radius:20px;overflow:hidden;">
-                            <div style="height:100%;width:${limitePct}%;background:${limiteColor};border-radius:20px;transition:width 1s ease;"></div>
-                        </div>
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <span style="color:#8b5cf6;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
+                            ${deuda > 0 ? `Pagado: ${fmt(gastadoMes)} / ${fmt(deuda)}` : 'Deuda del mes no configurada'}
+                        </span>
+                        <button onclick="editarDeuda('${t.id}',${deuda||''})" style="background:#f9f0ff;border:1px solid #e0c8ff;color:#9b59c7;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;">
+                            ${deuda > 0 ? 'Editar' : '+ Agregar'}
+                        </button>
                     </div>
-                ` : ''}
+                    ${deuda > 0 ? `
+                        <div style="height:6px;background:#f3d6f0;border-radius:20px;overflow:hidden;">
+                            <div style="height:100%;width:${deudaPct}%;background:${deudaColor};border-radius:20px;transition:width 1s ease;"></div>
+                        </div>
+                    ` : ''}
+                </div>
                 ${pagado ? `
                     <div style="background:#f0fdf4;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
                         <div>
