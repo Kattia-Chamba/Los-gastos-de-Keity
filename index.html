@@ -647,7 +647,8 @@ async function initDashboard() {
     document.getElementById('cardMes').textContent = new Date().toLocaleDateString('es',{month:'long',year:'numeric'});
     buildMonthFilter();
     spawnBubbles();
-    await Promise.all([cargarGastos(), cargarMetas(), cargarRecurrentes(), cargarTarjetas(), cargarPresupuesto(), cargarTodosGastos()]);
+    await cargarGastos();
+    await Promise.all([cargarMetas(), cargarRecurrentes(), cargarTarjetas(), cargarPresupuesto(), cargarTodosGastos()]);
 }
 
 function today() { return new Date().toISOString().split('T')[0]; }
@@ -1157,66 +1158,74 @@ function renderTarjetas() {
         const deudaPct    = deuda > 0 ? Math.min(gastadoMes/deuda*100, 100) : 0;
         const deudaColor  = deudaPct >= 100 ? 'linear-gradient(90deg,#86efac,#34d399)' : deudaPct >= 50 ? 'linear-gradient(90deg,#fde68a,#f59e0b)' : 'linear-gradient(90deg,#fca5a5,#ef4444)';
 
-        return `<div class="card card-enter" style="animation-delay:${i*0.1}s;overflow:hidden;${urgente?'animation:pulseBorder 2s infinite;':''}">
+        return `<div class="card card-enter" style="animation-delay:${i*0.1}s;overflow:hidden;display:flex;flex-direction:column;${urgente?'animation:pulseBorder 2s infinite;':''}">
 
             <!-- Tarjeta física -->
-            <div style="background:${design.bg};border-radius:18px 18px 0 0;padding:22px 20px 18px;position:relative;height:175px;overflow:hidden;">
-                <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.04);top:-80px;right:-50px;pointer-events:none;"></div>
-                <div style="position:absolute;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.03);bottom:-50px;left:-30px;pointer-events:none;"></div>
-
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
-                    <svg height="28" width="90" viewBox="0 0 90 28">${design.logoSvg}</svg>
-                    <button onclick="eliminarTarjeta('${t.id}')" style="background:rgba(255,255,255,0.15);border:none;color:rgba(255,255,255,0.8);border-radius:8px;width:24px;height:24px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">×</button>
+            <div style="background:${design.bg};border-radius:14px 14px 0 0;padding:14px 16px 12px;position:relative;height:130px;flex-shrink:0;overflow:hidden;">
+                <div style="position:absolute;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,0.04);top:-60px;right:-40px;pointer-events:none;"></div>
+                <div style="position:absolute;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.03);bottom:-40px;left:-20px;pointer-events:none;"></div>
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                    <svg height="22" width="80" viewBox="0 0 90 28">${design.logoSvg}</svg>
+                    <button onclick="eliminarTarjeta('${t.id}')" style="background:rgba(255,255,255,0.15);border:none;color:rgba(255,255,255,0.8);border-radius:6px;width:20px;height:20px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;">×</button>
                 </div>
-
-                ${cardChipSvg()}
-
-                <div style="position:absolute;bottom:18px;left:20px;right:20px;display:flex;justify-content:space-between;align-items:flex-end;">
+                <div style="position:absolute;bottom:12px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:flex-end;">
                     <div>
-                        <p style="color:rgba(255,255,255,0.45);font-size:8px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;">Vence día</p>
-                        <p style="color:rgba(255,255,255,0.9);font-family:'Courier New',monospace;font-size:16px;font-weight:700;letter-spacing:1px;">${String(t.dia_vencimiento).padStart(2,'0')} / ••</p>
+                        <p style="color:rgba(255,255,255,0.45);font-size:7px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:2px;">Vence día</p>
+                        <p style="color:rgba(255,255,255,0.9);font-family:'Courier New',monospace;font-size:13px;font-weight:700;letter-spacing:1px;">${String(t.dia_vencimiento).padStart(2,'0')} / ••</p>
                     </div>
-                    <svg height="22" width="36" viewBox="0 0 36 22">${design.networkSvg}</svg>
+                    <svg height="18" width="30" viewBox="0 0 36 22">${design.networkSvg}</svg>
                 </div>
             </div>
 
             <!-- Info pago -->
-            <div style="padding:14px 16px;">
-                <div style="margin-bottom:10px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                        <span style="color:#8b5cf6;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">
-                            ${deuda > 0 ? `Pagado: ${fmt(gastadoMes)} / ${fmt(deuda)}` : 'Deuda del mes no configurada'}
-                        </span>
-                        <button onclick="editarDeuda('${t.id}',${deuda||''})" style="background:#f9f0ff;border:1px solid #e0c8ff;color:#9b59c7;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;">
-                            ${deuda > 0 ? 'Editar' : '+ Agregar'}
-                        </button>
+            <div style="padding:10px 12px;display:flex;flex-direction:column;gap:7px;flex:1;">
+
+                <!-- Fila deuda del mes -->
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <p style="color:#9b59c7;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:1px;">Deuda del mes</p>
+                        <p style="color:#5a3d6b;font-size:13px;font-weight:800;">${deuda > 0 ? fmt(deuda) : '—'}</p>
                     </div>
-                    ${deuda > 0 ? `
-                        <div style="height:6px;background:#f3d6f0;border-radius:20px;overflow:hidden;">
+                    <button onclick="editarDeuda('${t.id}',${deuda||''})" style="background:#f9f0ff;border:1px solid #e0c8ff;color:#9b59c7;border-radius:8px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;">
+                        ${deuda > 0 ? '✏️ Editar' : '+ Agregar'}
+                    </button>
+                </div>
+
+                <!-- Barra de progreso -->
+                ${deuda > 0 ? `
+                    <div>
+                        <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                            <span style="color:#c4a0c8;font-size:9px;">Pagado: ${fmt(gastadoMes)}</span>
+                            <span style="color:#c4a0c8;font-size:9px;">${Math.round(deudaPct)}%</span>
+                        </div>
+                        <div style="height:5px;background:#f3d6f0;border-radius:20px;overflow:hidden;">
                             <div style="height:100%;width:${deudaPct}%;background:${deudaColor};border-radius:20px;transition:width 1s ease;"></div>
                         </div>
-                    ` : ''}
-                </div>
+                    </div>
+                ` : ''}
+
+                <!-- Estado pago -->
                 ${pagado ? `
-                    <div style="background:#f0fdf4;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+                    <div style="background:#f0fdf4;border-radius:10px;padding:7px 10px;display:flex;justify-content:space-between;align-items:center;margin-top:auto;">
                         <div>
-                            <p style="color:#059669;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;">✅ Pagado este mes</p>
-                            <p style="color:#065f46;font-size:20px;font-weight:800;margin-top:2px;">${fmt(gastadoMes)}</p>
+                            <p style="color:#059669;font-size:8px;font-weight:800;text-transform:uppercase;">✅ Pagado este mes</p>
+                            <p style="color:#065f46;font-size:15px;font-weight:800;margin-top:1px;">${fmt(gastadoMes)}</p>
                         </div>
-                        <p style="color:#6ee7b7;font-size:11px;">${pagoMes ? fmtFecha(pagoMes.fecha) : ''}</p>
+                        <p style="color:#6ee7b7;font-size:10px;">${pagoMes ? fmtFecha(pagoMes.fecha) : ''}</p>
                     </div>
                 ` : `
-                    <div style="background:${urgente?'#fff1f2':'#fafafa'};border-radius:12px;padding:10px 12px;margin-bottom:10px;border:1px solid ${urgente?'#fecaca':'#f0e8ff'};">
-                        <p style="color:${urgente?'#ef4444':'#8b5cf6'};font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;">${urgente?'⚠️ Vence pronto':'⏳ Pendiente'}</p>
-                        <p style="color:${urgente?'#dc2626':'#5b21b6'};font-size:13px;font-weight:700;margin-top:2px;">
-                            ${diasFalta===0?'¡Vence hoy!':diasFalta===1?'Vence mañana':`Faltan ${diasFalta} días`}
-                        </p>
+                    <div style="margin-top:auto;">
+                        <div style="background:${urgente?'#fff1f2':'#f8f4ff'};border-radius:8px;padding:5px 10px;margin-bottom:6px;border:1px solid ${urgente?'#fecaca':'#ede9fe'};">
+                            <p style="color:${urgente?'#ef4444':'#7c3aed'};font-size:10px;font-weight:700;">
+                                ${urgente?'⚠️ Vence pronto — ':'⏳ '}${diasFalta===0?'¡Vence hoy!':diasFalta===1?'Vence mañana':`Faltan ${diasFalta} días`}
+                            </p>
+                        </div>
+                        <button onclick="openPagoModal('${t.nombre.replace(/'/g,"\\'")}')"
+                            style="width:100%;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:white;border:none;border-radius:10px;padding:7px;font-weight:700;font-size:12px;cursor:pointer;"
+                            onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                            Registrar pago 💳
+                        </button>
                     </div>
-                    <button onclick="openPagoModal('${t.nombre.replace(/'/g,"\\'")}')"
-                        style="width:100%;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:white;border:none;border-radius:12px;padding:10px;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:0.3px;"
-                        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                        Registrar pago
-                    </button>
                 `}
             </div>
         </div>`;
