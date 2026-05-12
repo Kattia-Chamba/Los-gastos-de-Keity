@@ -422,7 +422,13 @@
             <h3 class="text-sm font-bold uppercase tracking-wider mb-1" style="color:#c054a0">+ Nueva tarjeta 💳</h3>
             <p class="text-xs mb-4" style="color:#d4a0c8">Registrá cada tarjeta con su fecha de vencimiento mensual.</p>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <input type="text" id="tarNombre" placeholder="Nombre (ej: Visa BCP)" class="px-4 py-3 text-sm">
+                <select id="tarNombre" class="px-4 py-3 text-sm">
+                    <option value="">Seleccionar tarjeta…</option>
+                    <option value="BCP">💳 BCP Visa</option>
+                    <option value="BBVA">💳 BBVA Free Platinum Visa</option>
+                    <option value="Io">💳 Io Visa (BCP)</option>
+                    <option value="Oh!">💳 Oh! Visa (Falabella)</option>
+                </select>
                 <input type="number" id="tarDia" placeholder="Día de vencimiento (1-31)" min="1" max="31" class="px-4 py-3 text-sm">
                 <select id="tarColor" class="px-4 py-3 text-sm">
                     <option value="#f9a8d4">🌸 Rosado</option>
@@ -1033,22 +1039,22 @@ const BANK_DESIGNS = {
     'BCP':  {
         bg: 'linear-gradient(135deg,#003087 0%,#0057b8 60%,#1a73c8 100%)',
         logoSvg: `<text x="0" y="16" font-family="Arial Black,sans-serif" font-weight="900" font-size="16" fill="white" letter-spacing="1">BCP</text>`,
-        networkSvg: `<circle cx="12" cy="11" r="10" fill="#eb001b" opacity="0.9"/><circle cx="22" cy="11" r="10" fill="#f79e1b" opacity="0.9"/><path d="M17 3.8a10 10 0 0 1 0 14.4A10 10 0 0 1 17 3.8z" fill="#ff5f00"/>`,
+        networkSvg: `<text x="0" y="17" font-family="Arial,sans-serif" font-weight="900" font-size="18" fill="white" font-style="italic" letter-spacing="-1">VISA</text>`,
     },
     'BBVA': {
         bg: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)',
         logoSvg: `<text x="0" y="15" font-family="Arial Black,sans-serif" font-weight="900" font-size="13" fill="#00adef" letter-spacing="2">BBVA</text><text x="0" y="26" font-family="Arial,sans-serif" font-size="8" fill="#aaa" letter-spacing="1">FREE PLATINUM</text>`,
-        networkSvg: `<rect x="2" y="6" width="30" height="10" rx="2" fill="none" stroke="#c0c0c0" stroke-width="1"/><text x="6" y="14" font-family="Arial,sans-serif" font-size="7" fill="#c0c0c0">PLATINUM</text>`,
+        networkSvg: `<text x="0" y="17" font-family="Arial,sans-serif" font-weight="900" font-size="18" fill="#c0c0c0" font-style="italic" letter-spacing="-1">VISA</text>`,
     },
     'IO':   {
         bg: 'linear-gradient(135deg,#050505 0%,#0d1b2a 50%,#0a2540 100%)',
         logoSvg: `<text x="0" y="20" font-family="Arial Black,sans-serif" font-weight="900" font-size="22" fill="#1e90ff">io</text>`,
-        networkSvg: `<circle cx="12" cy="11" r="10" fill="#eb001b" opacity="0.85"/><circle cx="22" cy="11" r="10" fill="#f79e1b" opacity="0.85"/><path d="M17 3.8a10 10 0 0 1 0 14.4A10 10 0 0 1 17 3.8z" fill="#ff5f00"/>`,
+        networkSvg: `<text x="0" y="17" font-family="Arial,sans-serif" font-weight="900" font-size="18" fill="white" font-style="italic" letter-spacing="-1">VISA</text>`,
     },
     'OH':   {
         bg: 'linear-gradient(135deg,#a50014 0%,#d4001a 50%,#ff1a35 100%)',
         logoSvg: `<text x="0" y="20" font-family="Arial Black,sans-serif" font-weight="900" font-size="20" fill="white">Oh!</text>`,
-        networkSvg: `<circle cx="12" cy="11" r="10" fill="rgba(255,255,255,0.25)"/><circle cx="22" cy="11" r="10" fill="rgba(255,255,255,0.15)"/>`,
+        networkSvg: `<text x="0" y="17" font-family="Arial,sans-serif" font-weight="900" font-size="18" fill="rgba(255,255,255,0.85)" font-style="italic" letter-spacing="-1">VISA</text>`,
     },
 };
 
