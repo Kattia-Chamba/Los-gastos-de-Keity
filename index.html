@@ -35,14 +35,13 @@
         /* Burbujas flotantes */
         .bubble {
             position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
-            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(244,114,182,0.2));
             animation: floatBubble linear infinite;
         }
         @keyframes floatBubble {
-            0%   { transform: translateY(100vh) scale(0); opacity: 0; }
-            10%  { opacity: 0.6; }
-            90%  { opacity: 0.3; }
-            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+            0%   { transform: translateY(100vh) scale(0) rotate(0deg); opacity: 0; }
+            10%  { opacity: 0.7; }
+            90%  { opacity: 0.4; }
+            100% { transform: translateY(-10vh) scale(1) rotate(360deg); opacity: 0; }
         }
 
         /* ── Cards ── */
@@ -140,8 +139,12 @@
         .fade-in { animation: fadeIn 0.5s ease forwards; }
         @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
 
-        .card-enter { opacity:0; animation: cardEnter 0.5s ease forwards; }
-        @keyframes cardEnter { from{opacity:0;transform:translateY(20px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+        .card-enter { opacity:0; animation: cardEnter 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        @keyframes cardEnter {
+            0%   { opacity:0; transform:translateY(30px) scale(0.9); }
+            60%  { opacity:1; transform:translateY(-6px) scale(1.02); }
+            100% { opacity:1; transform:translateY(0) scale(1); }
+        }
 
         /* Número contando */
         .num-animate { transition: all 0.8s ease; }
@@ -232,6 +235,7 @@
             <button onclick="switchPage('Dashboard')" id="navDashboard" class="px-5 py-2 rounded-xl text-sm font-bold transition-all tab-active">📊 Dashboard</button>
             <button onclick="switchPage('Metas')" id="navMetas" class="px-5 py-2 rounded-xl text-sm font-bold transition-all tab-inactive">🎯 Metas</button>
             <button onclick="switchPage('Recurrentes')" id="navRecurrentes" class="px-5 py-2 rounded-xl text-sm font-bold transition-all tab-inactive">🔄 Fijos</button>
+            <button onclick="switchPage('Tarjetas')" id="navTarjetas" class="px-5 py-2 rounded-xl text-sm font-bold transition-all tab-inactive">💳 Tarjetas</button>
         </div>
     </div>
 
@@ -240,22 +244,22 @@
 
         <!-- Cards -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="card card-pink p-5 transition-transform hover:-translate-y-1">
+            <div class="card card-enter card-pink p-5 hover:-translate-y-1" style="animation-delay:0s">
                 <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#d470aa">Este mes</p>
                 <p id="cardTotal" class="text-2xl font-extrabold" style="color:#9b3a7a">S/ 0.00</p>
                 <p id="cardMes" class="text-xs mt-1" style="color:#d470aa"></p>
             </div>
-            <div class="card card-lila p-5 transition-transform hover:-translate-y-1">
+            <div class="card card-enter card-lila p-5 hover:-translate-y-1" style="animation-delay:0.1s">
                 <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#8b5cf6">Promedio/día</p>
                 <p id="cardPromedio" class="text-2xl font-extrabold" style="color:#6d28d9">S/ 0.00</p>
                 <p class="text-xs mt-1" style="color:#8b5cf6">Días transcurridos</p>
             </div>
-            <div class="card card-peach p-5 transition-transform hover:-translate-y-1">
+            <div class="card card-enter card-peach p-5 hover:-translate-y-1" style="animation-delay:0.2s">
                 <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#e07040">Mayor categoría</p>
                 <p id="cardCategoria" class="text-xl font-extrabold" style="color:#b85030">—</p>
                 <p id="cardCategoriaPct" class="text-xs mt-1" style="color:#e07040"></p>
             </div>
-            <div class="card card-mint p-5 transition-transform hover:-translate-y-1">
+            <div class="card card-enter card-mint p-5 hover:-translate-y-1" style="animation-delay:0.3s">
                 <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:#10b981">Registros</p>
                 <p id="cardRegistros" class="text-2xl font-extrabold" style="color:#065f46">0</p>
                 <p class="text-xs mt-1" style="color:#10b981">Este mes</p>
@@ -335,6 +339,7 @@
                     <option value="Ahorro">🏦 Ahorro</option>
                     <option value="Belleza">💄 Belleza</option>
                     <option value="Plan celular">📱 Plan celular</option>
+                    <option value="Tarjeta">💳 Tarjeta</option>
                     <option value="Otros">🎀 Otros</option>
                 </select>
                 <input type="number" id="inMonto" placeholder="Monto S/" step="0.01" min="0.01" class="px-4 py-3 text-sm" onkeydown="if(event.key==='Enter')agregarGasto()">
@@ -393,6 +398,37 @@
         <div id="metasEmpty" class="card p-10 text-center hidden">
             <div class="text-4xl mb-3">🎯</div>
             <p class="text-sm font-semibold" style="color:#d4a0c8">No tenés metas aún</p>
+        </div>
+    </div>
+
+    <!-- ══ PAGE TARJETAS ══ -->
+    <div id="pageTarjetas" class="hidden max-w-6xl mx-auto px-4 py-5 space-y-5">
+
+        <!-- Agregar tarjeta -->
+        <div class="card p-6">
+            <h3 class="text-sm font-bold uppercase tracking-wider mb-1" style="color:#c054a0">+ Nueva tarjeta 💳</h3>
+            <p class="text-xs mb-4" style="color:#d4a0c8">Registrá cada tarjeta con su fecha de vencimiento mensual.</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <input type="text" id="tarNombre" placeholder="Nombre (ej: Visa BCP)" class="px-4 py-3 text-sm">
+                <input type="number" id="tarDia" placeholder="Día de vencimiento (1-31)" min="1" max="31" class="px-4 py-3 text-sm">
+                <select id="tarColor" class="px-4 py-3 text-sm">
+                    <option value="#f9a8d4">🌸 Rosado</option>
+                    <option value="#c4b5fd">💜 Lila</option>
+                    <option value="#93c5fd">💙 Celeste</option>
+                    <option value="#6ee7b7">💚 Menta</option>
+                    <option value="#fcd34d">💛 Amarillo</option>
+                    <option value="#fca5a5">❤️ Coral</option>
+                </select>
+                <button onclick="agregarTarjeta()" class="btn-primary py-3 text-sm">Agregar 💳</button>
+            </div>
+            <div id="tarMsg" class="mt-3 text-xs hidden py-2 px-3 rounded-xl inline-block"></div>
+        </div>
+
+        <!-- Lista de tarjetas -->
+        <div id="tarjetasGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        <div id="tarjetasEmpty" class="card p-10 text-center hidden">
+            <div class="text-4xl mb-3">💳</div>
+            <p class="text-sm font-semibold" style="color:#d4a0c8">No tenés tarjetas registradas</p>
         </div>
     </div>
 
@@ -462,6 +498,21 @@
     </div>
 </div>
 
+<!-- MODAL Pago tarjeta -->
+<div id="modalPagoTarjeta" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-bg" style="display:none">
+    <div class="card p-6 w-full max-w-sm fade-in">
+        <h3 id="modalPagoTitle" class="text-base font-bold mb-1" style="color:#c054a0">Registrar pago</h3>
+        <p class="text-xs mb-4" style="color:#d4a0c8">¿Cuánto pagaste esta tarjeta este mes?</p>
+        <input type="number" id="modalPagoMonto" placeholder="Monto S/" step="0.01" min="0.01" class="w-full px-4 py-3 text-sm mb-2">
+        <input type="date" id="modalPagoFecha" class="w-full px-4 py-3 text-sm mb-3">
+        <input type="hidden" id="modalPagoNombre">
+        <div class="flex gap-2">
+            <button onclick="confirmarPagoTarjeta()" class="flex-1 btn-primary py-2.5 text-sm">Registrar 💳</button>
+            <button onclick="closeModal('modalPagoTarjeta')" class="flex-1 btn-soft py-2.5 text-sm">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <!-- MODAL Registrar recurrente -->
 <div id="modalRec" class="fixed inset-0 z-50 hidden items-center justify-center p-4 modal-bg" style="display:none">
     <div class="card p-6 w-full max-w-sm fade-in">
@@ -483,20 +534,20 @@ const sb = createClient(
     'sb_publishable_lC4xFArQXc5-HEksiXw4Aw__qVaadaM'
 );
 
-let gastos = [], metas = [], recurrentes = [], presupuesto = null, allGastos = [];
+let gastos = [], metas = [], recurrentes = [], tarjetas = [], presupuesto = null, allGastos = [];
 let chartPie = null, chartBar = null, chartMonth = null;
 
 const CAT_COLORS = {
     'Comida':'#ffb3ba','Transporte':'#aec6ff','Servicios':'#fff0a0',
     'Salud':'#ffb3c6','Entretenimiento':'#d4b8ff','Ropa':'#ffcce0',
     'Educación':'#b3e8ff','Hogar':'#b8f0d4','Ahorro':'#a8f0e0',
-    'Belleza':'#ffb8d8','Plan celular':'#bae6fd','Otros':'#e8d4f0'
+    'Belleza':'#ffb8d8','Plan celular':'#bae6fd','Tarjeta':'#ddd6fe','Otros':'#e8d4f0'
 };
 const CAT_TEXT = {
     'Comida':'#c0505a','Transporte':'#3060c0','Servicios':'#806000',
     'Salud':'#c04060','Entretenimiento':'#6040b0','Ropa':'#c04080',
     'Educación':'#2080b0','Hogar':'#208058','Ahorro':'#206858',
-    'Belleza':'#c04878','Plan celular':'#0369a1','Otros':'#806090'
+    'Belleza':'#c04878','Plan celular':'#0369a1','Tarjeta':'#6d28d9','Otros':'#806090'
 };
 
 // ── AUTH ──────────────────────────────────────────────────────────
@@ -550,7 +601,7 @@ sb.auth.onAuthStateChange((_e, session) => {
 
 // ── NAV ───────────────────────────────────────────────────────────
 function switchPage(page) {
-    ['Dashboard','Metas','Recurrentes'].forEach(p => {
+    ['Dashboard','Metas','Recurrentes','Tarjetas'].forEach(p => {
         document.getElementById('page'+p).classList.add('hidden');
         document.getElementById('nav'+p).className = 'px-5 py-2 rounded-xl text-sm font-bold transition-all tab-inactive';
     });
@@ -564,7 +615,7 @@ async function initDashboard() {
     document.getElementById('cardMes').textContent = new Date().toLocaleDateString('es',{month:'long',year:'numeric'});
     buildMonthFilter();
     spawnBubbles();
-    await Promise.all([cargarGastos(), cargarMetas(), cargarRecurrentes(), cargarPresupuesto(), cargarTodosGastos()]);
+    await Promise.all([cargarGastos(), cargarMetas(), cargarRecurrentes(), cargarTarjetas(), cargarPresupuesto(), cargarTodosGastos()]);
 }
 
 function today() { return new Date().toISOString().split('T')[0]; }
@@ -919,15 +970,117 @@ function renderMonthChart() {
     });
 }
 
+// ── TARJETAS ──────────────────────────────────────────────────────
+async function cargarTarjetas() {
+    const { data } = await sb.from('tarjetas').select('*').order('created_at',{ascending:true});
+    tarjetas = data || [];
+    renderTarjetas();
+}
+async function agregarTarjeta() {
+    const nombre = document.getElementById('tarNombre').value.trim();
+    const dia    = parseInt(document.getElementById('tarDia').value);
+    const color  = document.getElementById('tarColor').value;
+    if (!nombre || !dia || dia<1 || dia>31) return showMsg('tarMsg','Completá nombre y día de vencimiento 💕','err');
+    const { data:{user} } = await sb.auth.getUser();
+    const { error } = await sb.from('tarjetas').insert({user_id:user.id, nombre, dia_vencimiento:dia, color});
+    if (error) return showMsg('tarMsg','Error: '+error.message,'err');
+    document.getElementById('tarNombre').value = '';
+    document.getElementById('tarDia').value    = '';
+    showMsg('tarMsg','¡Tarjeta agregada! 💳','ok');
+    setTimeout(()=>document.getElementById('tarMsg').classList.add('hidden'),2000);
+    cargarTarjetas();
+}
+async function eliminarTarjeta(id) {
+    if (!confirm('¿Eliminar esta tarjeta?')) return;
+    await sb.from('tarjetas').delete().eq('id',id);
+    cargarTarjetas();
+}
+function openPagoModal(nombre, color) {
+    document.getElementById('modalPagoTitle').textContent = `Pago: ${nombre}`;
+    document.getElementById('modalPagoNombre').value      = nombre;
+    document.getElementById('modalPagoMonto').value       = '';
+    document.getElementById('modalPagoFecha').value       = today();
+    openModal('modalPagoTarjeta');
+}
+async function confirmarPagoTarjeta() {
+    const nombre = document.getElementById('modalPagoNombre').value;
+    const monto  = parseFloat(document.getElementById('modalPagoMonto').value);
+    const fecha  = document.getElementById('modalPagoFecha').value;
+    if (!monto||monto<=0) return;
+    const { data:{user} } = await sb.auth.getUser();
+    await sb.from('gastos').insert({user_id:user.id, fecha, categoria:'Tarjeta', monto, descripcion:nombre});
+    closeModal('modalPagoTarjeta');
+    showMsg('tarMsg','¡Pago registrado! 💳','ok');
+    setTimeout(()=>document.getElementById('tarMsg').classList.add('hidden'),2000);
+    await cargarGastos();
+    await cargarTodosGastos();
+    renderTarjetas();
+}
+function renderTarjetas() {
+    const grid  = document.getElementById('tarjetasGrid');
+    const empty = document.getElementById('tarjetasEmpty');
+    if (!tarjetas.length) { grid.innerHTML=''; empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
+
+    const mes       = mesActual();
+    const gastosM   = gastos.filter(g=>g.fecha?.startsWith(mes));
+    const hoy       = new Date();
+    const diaHoy    = hoy.getDate();
+
+    grid.innerHTML = tarjetas.map(t => {
+        const pagoMes = gastosM.find(g=>g.categoria==='Tarjeta'&&g.descripcion===t.nombre);
+        const pagado  = !!pagoMes;
+        const diasFalta = t.dia_vencimiento >= diaHoy
+            ? t.dia_vencimiento - diaHoy
+            : new Date(hoy.getFullYear(), hoy.getMonth()+1, t.dia_vencimiento) - hoy > 0
+                ? Math.ceil((new Date(hoy.getFullYear(), hoy.getMonth()+1, t.dia_vencimiento) - hoy) / 86400000)
+                : 0;
+        const urgente = !pagado && diasFalta <= 5;
+        const borderColor = urgente ? '#fca5a5' : t.color;
+
+        return `<div class="card card-enter p-5" style="border-color:${borderColor}; border-width:2px; ${urgente?'animation: pulseBorder 2s infinite;':''}">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <div class="w-10 h-7 rounded-lg mb-2" style="background:linear-gradient(135deg,${t.color},${t.color}99)"></div>
+                    <p class="font-extrabold text-base" style="color:#5a3d6b">${t.nombre}</p>
+                    <p class="text-xs mt-0.5" style="color:#c4a0c8">Vence el <strong>día ${t.dia_vencimiento}</strong> de cada mes</p>
+                </div>
+                <button onclick="eliminarTarjeta('${t.id}')" class="btn-danger px-2 py-1 text-xs">×</button>
+            </div>
+
+            ${pagado ? `
+                <div class="rounded-xl p-3 mb-3" style="background:#f0fdf4; border:1.5px solid #a7f3d0">
+                    <p class="text-xs font-bold text-emerald-600">✅ Pagado este mes</p>
+                    <p class="text-lg font-extrabold text-emerald-700 mt-0.5">${fmt(pagoMes.monto)}</p>
+                    <p class="text-xs text-emerald-500">${fmtFecha(pagoMes.fecha)}</p>
+                </div>
+            ` : `
+                <div class="rounded-xl p-3 mb-3" style="background:${urgente?'#fff1f2':'#fdf0ff'}; border:1.5px solid ${urgente?'#fca5a5':'#e8d0f8'}">
+                    <p class="text-xs font-bold" style="color:${urgente?'#e05070':'#c054a0'}">${urgente?'⚠️ Vence pronto':'⏳ Pendiente este mes'}</p>
+                    <p class="text-sm font-semibold mt-0.5" style="color:${urgente?'#e05070':'#9b3a7a'}">
+                        ${diasFalta===0 ? '¡Vence hoy!' : `Faltan ${diasFalta} día${diasFalta===1?'':'s'}`}
+                    </p>
+                </div>
+            `}
+
+            ${!pagado ? `<button onclick="openPagoModal('${t.nombre.replace(/'/g,"\\'")}','${t.color}')" class="w-full btn-primary py-2.5 text-sm">Registrar pago 💳</button>` : ''}
+        </div>`;
+    }).join('');
+}
+
 // ── UTILS ─────────────────────────────────────────────────────────
 function groupBy(arr) { return arr.reduce((acc,g)=>{acc[g.categoria]=(acc[g.categoria]||0)+Number(g.monto);return acc;},{}); }
 function fmt(val) { return 'S/ '+Number(val).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2}); }
-function fmtFecha(f) { return new Date(f+'T12:00').toLocaleDateString('es',{day:'2-digit',month:'short',year:'2-digit'}); }
+function fmtFecha(f) {
+    const [y,m,d] = f.split('-');
+    const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    return `${d}/${meses[parseInt(m)-1]}/${y.slice(2)}`;
+}
 
 // ── ANIMACIONES ───────────────────────────────────────────────────
 function animateNumber(el, target, prefix='S/ ') {
     const start    = 0;
-    const duration = 900;
+    const duration = 1400;
     const startT   = performance.now();
     function step(now) {
         const p   = Math.min((now - startT) / duration, 1);
@@ -941,7 +1094,7 @@ function animateNumber(el, target, prefix='S/ ') {
 }
 
 function animateCount(el, target) {
-    const duration = 700;
+    const duration = 1000;
     const startT   = performance.now();
     function step(now) {
         const p   = Math.min((now - startT) / duration, 1);
@@ -975,16 +1128,23 @@ function lanзarConfetti() {
 
 function spawnBubbles() {
     const bg = document.getElementById('bgMain');
-    for (let i = 0; i < 8; i++) {
+    const bubbleColors = [
+        'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(244,114,182,0.5))',
+        'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(192,132,252,0.5))',
+        'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(167,139,250,0.4))',
+        'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(249,168,212,0.5))',
+    ];
+    for (let i = 0; i < 12; i++) {
         const b = document.createElement('div');
         b.className = 'bubble';
-        const size = 20 + Math.random() * 60;
+        const size = 30 + Math.random() * 80;
         b.style.cssText = `
             width:${size}px; height:${size}px;
             left:${Math.random()*100}vw;
-            animation-duration:${12+Math.random()*20}s;
-            animation-delay:${Math.random()*15}s;
-            opacity:0.4;
+            background:${bubbleColors[Math.floor(Math.random()*bubbleColors.length)]};
+            animation-duration:${10+Math.random()*18}s;
+            animation-delay:${Math.random()*12}s;
+            box-shadow: inset 0 0 ${size/3}px rgba(255,255,255,0.6), 0 0 ${size/4}px rgba(244,114,182,0.3);
         `;
         bg.appendChild(b);
     }
