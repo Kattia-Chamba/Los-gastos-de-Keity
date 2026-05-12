@@ -12,81 +12,67 @@
         * { font-family: 'Nunito', system-ui, sans-serif; }
         body { background: #fdf4fb; overflow-x: hidden; }
 
-        /* ── Fondo animado ── */
+        /* ── Fondo elegante ── */
         .bg-main {
-            background: linear-gradient(160deg, #fce4f3 0%, #ede9ff 35%, #fdf4fb 60%, #fce4f3 100%);
-            background-size: 400% 400%;
-            animation: bgMove 12s ease infinite;
+            background: #f8f4ff;
             min-height: 100vh;
             position: relative;
-        }
-        @keyframes bgMove {
-            0%   { background-position: 0% 50%; }
-            50%  { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
         .bg-main::before {
             content: '';
             position: fixed; inset: 0; z-index: 0; pointer-events: none;
             background:
-                radial-gradient(ellipse at 15% 15%, rgba(236,72,153,0.18) 0%, transparent 45%),
-                radial-gradient(ellipse at 85% 85%, rgba(168,85,247,0.18) 0%, transparent 45%),
-                radial-gradient(ellipse at 50% 50%, rgba(99,102,241,0.1) 0%, transparent 55%);
-            animation: bgPulse 6s ease-in-out infinite alternate;
-        }
-        @keyframes bgPulse {
-            0%   { opacity: 0.5; }
-            100% { opacity: 1; }
+                radial-gradient(ellipse at 0% 0%, rgba(236,72,153,0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 100% 100%, rgba(168,85,247,0.08) 0%, transparent 50%);
         }
 
-        /* Destellos flotantes */
+        /* Partículas sutiles */
         .sparkle {
             position: fixed; pointer-events: none; z-index: 0;
+            width: 4px; height: 4px; border-radius: 50%;
+            background: rgba(236,72,153,0.3);
             animation: sparkleFly linear infinite;
-            font-size: 16px; user-select: none;
         }
+        .sparkle:nth-child(even) { background: rgba(168,85,247,0.3); }
         @keyframes sparkleFly {
-            0%   { transform: translateY(100vh) rotate(0deg) scale(0); opacity: 0; }
-            10%  { opacity: 1; transform: translateY(85vh) rotate(45deg) scale(1); }
-            90%  { opacity: 0.6; }
-            100% { transform: translateY(-5vh) rotate(360deg) scale(0.5); opacity: 0; }
+            0%   { transform: translateY(100vh) scale(0); opacity: 0; }
+            20%  { opacity: 1; }
+            80%  { opacity: 0.5; }
+            100% { transform: translateY(-5vh) scale(1); opacity: 0; }
         }
 
         /* ── Cards ── */
         .card {
-            background: rgba(255,255,255,0.88);
-            backdrop-filter: blur(16px);
-            border-radius: 22px;
-            box-shadow: 0 4px 24px rgba(200,130,200,0.12);
-            border: 1.5px solid rgba(243,214,240,0.8);
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 2px 20px rgba(168,85,247,0.08);
+            border: 1px solid #f0e8ff;
             position: relative; z-index: 1;
-            transition: transform 0.25s, box-shadow 0.25s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
-        .card:hover { box-shadow: 0 12px 40px rgba(200,130,200,0.25); transform: translateY(-2px); }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(168,85,247,0.14); }
+
+        /* Tarjetas resumen con acento lateral */
         .card-pink  {
-            background: linear-gradient(135deg,#f9a8d4,#ec4899);
-            border: none;
-            box-shadow: 0 8px 32px rgba(236,72,153,0.35);
+            background: white;
+            border-left: 4px solid #ec4899;
+            box-shadow: 0 2px 20px rgba(236,72,153,0.1);
         }
-        .card-pink:hover  { box-shadow: 0 14px 45px rgba(236,72,153,0.5); }
         .card-lila  {
-            background: linear-gradient(135deg,#c4b5fd,#8b5cf6);
-            border: none;
-            box-shadow: 0 8px 32px rgba(139,92,246,0.35);
+            background: white;
+            border-left: 4px solid #8b5cf6;
+            box-shadow: 0 2px 20px rgba(139,92,246,0.1);
         }
-        .card-lila:hover  { box-shadow: 0 14px 45px rgba(139,92,246,0.5); }
         .card-mint  {
-            background: linear-gradient(135deg,#6ee7b7,#10b981);
-            border: none;
-            box-shadow: 0 8px 32px rgba(16,185,129,0.35);
+            background: white;
+            border-left: 4px solid #10b981;
+            box-shadow: 0 2px 20px rgba(16,185,129,0.1);
         }
-        .card-mint:hover  { box-shadow: 0 14px 45px rgba(16,185,129,0.5); }
         .card-peach {
-            background: linear-gradient(135deg,#fcd34d,#f59e0b);
-            border: none;
-            box-shadow: 0 8px 32px rgba(245,158,11,0.35);
+            background: white;
+            border-left: 4px solid #f59e0b;
+            box-shadow: 0 2px 20px rgba(245,158,11,0.1);
         }
-        .card-peach:hover { box-shadow: 0 14px 45px rgba(245,158,11,0.5); }
 
         /* ── Botones ── */
         .btn-primary {
@@ -123,16 +109,11 @@
 
         /* ── Header ── */
         .header-bg {
-            background: linear-gradient(135deg, #be185d 0%, #7c3aed 60%, #4f46e5 100%);
-            box-shadow: 0 4px 30px rgba(124,58,237,0.4);
+            background: white;
+            border-bottom: 1px solid #f0e8ff;
+            box-shadow: 0 1px 20px rgba(168,85,247,0.08);
             position: relative; z-index: 10;
         }
-        .header-bg .btn-soft {
-            background: rgba(255,255,255,0.2) !important;
-            color: white !important;
-            border-color: rgba(255,255,255,0.3) !important;
-        }
-        .header-bg .btn-soft:hover { background: rgba(255,255,255,0.3) !important; }
         .logo-text {
             background: linear-gradient(135deg,#ec4899,#a855f7,#6366f1);
             background-size: 200% 200%;
@@ -255,7 +236,7 @@
                 <h1 class="text-lg font-extrabold logo-text">Mis Gastos</h1>
             </div>
             <div class="flex items-center gap-3">
-                <span id="headerEmail" class="text-xs hidden sm:block" style="color:rgba(255,255,255,0.7)"></span>
+                <span id="headerEmail" class="text-xs hidden sm:block" style="color:#c4a0d4"></span>
                 <button onclick="logout()" class="btn-soft px-4 py-1.5 text-sm">Salir</button>
             </div>
         </div>
@@ -277,24 +258,24 @@
         <!-- Cards -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="card card-enter card-pink p-5" style="animation-delay:0s">
-                <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:rgba(255,255,255,0.8)">Este mes 💸</p>
-                <p id="cardTotal" class="text-3xl font-extrabold text-white">S/ 0.00</p>
-                <p id="cardMes" class="text-xs mt-1" style="color:rgba(255,255,255,0.7)"></p>
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:#ec4899">Este mes</p>
+                <p id="cardTotal" class="text-3xl font-extrabold" style="color:#1e1b2e">S/ 0.00</p>
+                <p id="cardMes" class="text-xs mt-2" style="color:#a78bfa"></p>
             </div>
             <div class="card card-enter card-lila p-5" style="animation-delay:0.1s">
-                <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:rgba(255,255,255,0.8)">Promedio/día 📊</p>
-                <p id="cardPromedio" class="text-3xl font-extrabold text-white">S/ 0.00</p>
-                <p class="text-xs mt-1" style="color:rgba(255,255,255,0.7)">Días transcurridos</p>
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:#8b5cf6">Promedio/día</p>
+                <p id="cardPromedio" class="text-3xl font-extrabold" style="color:#1e1b2e">S/ 0.00</p>
+                <p class="text-xs mt-2" style="color:#a78bfa">Días transcurridos</p>
             </div>
             <div class="card card-enter card-peach p-5" style="animation-delay:0.2s">
-                <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:rgba(255,255,255,0.8)">Mayor categoría 🏆</p>
-                <p id="cardCategoria" class="text-2xl font-extrabold text-white">—</p>
-                <p id="cardCategoriaPct" class="text-xs mt-1" style="color:rgba(255,255,255,0.7)"></p>
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:#f59e0b">Mayor categoría</p>
+                <p id="cardCategoria" class="text-2xl font-extrabold" style="color:#1e1b2e">—</p>
+                <p id="cardCategoriaPct" class="text-xs mt-2" style="color:#a78bfa"></p>
             </div>
             <div class="card card-enter card-mint p-5" style="animation-delay:0.3s">
-                <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color:rgba(255,255,255,0.8)">Registros ✅</p>
-                <p id="cardRegistros" class="text-3xl font-extrabold text-white">0</p>
-                <p class="text-xs mt-1" style="color:rgba(255,255,255,0.7)">Este mes</p>
+                <p class="text-xs font-semibold uppercase tracking-widest mb-3" style="color:#10b981">Registros</p>
+                <p id="cardRegistros" class="text-3xl font-extrabold" style="color:#1e1b2e">0</p>
+                <p class="text-xs mt-2" style="color:#a78bfa">Este mes</p>
             </div>
         </div>
 
@@ -1159,18 +1140,17 @@ function lanzarConfetti() {
 }
 
 function spawnBubbles() {
-    const bg   = document.getElementById('bgMain');
-    const emojis = ['✨','🌸','💫','🌷','⭐','💕','🦋','🌺','💎','🎀'];
-    for (let i = 0; i < 15; i++) {
+    const bg = document.getElementById('bgMain');
+    for (let i = 0; i < 18; i++) {
         const s = document.createElement('div');
         s.className = 'sparkle';
-        s.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        const size = 3 + Math.random() * 5;
         s.style.cssText = `
             left:${Math.random()*100}vw;
-            font-size:${14+Math.random()*18}px;
-            animation-duration:${12+Math.random()*20}s;
-            animation-delay:${Math.random()*15}s;
-            opacity:0.7;
+            width:${size}px; height:${size}px;
+            animation-duration:${15+Math.random()*25}s;
+            animation-delay:${Math.random()*20}s;
+            background: ${Math.random()>0.5 ? 'rgba(236,72,153,0.25)' : 'rgba(168,85,247,0.25)'};
         `;
         bg.appendChild(s);
     }
