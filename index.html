@@ -299,6 +299,12 @@
             </div>
         </div>
 
+        <!-- Top 3 gastos del mes -->
+        <div id="top3Box" class="card p-5 hidden">
+            <h3 class="text-sm font-bold uppercase tracking-wider mb-3" style="color:#c054a0">🏆 Top 3 gastos del mes</h3>
+            <div id="top3List"></div>
+        </div>
+
         <!-- Recurrentes pendientes -->
         <div id="recAlertBox" class="hidden card p-5" style="border-color:#fbbde8; background:linear-gradient(135deg,#fff0f8,#f8f0ff)">
             <div class="flex justify-between items-start mb-3">
@@ -430,14 +436,7 @@
                     <option value="Oh!">💳 Oh! Visa (Financiera Oh!)</option>
                 </select>
                 <input type="number" id="tarDia" placeholder="Día de vencimiento (1-31)" min="1" max="31" class="px-4 py-3 text-sm">
-                <select id="tarColor" class="px-4 py-3 text-sm">
-                    <option value="#f9a8d4">🌸 Rosado</option>
-                    <option value="#c4b5fd">💜 Lila</option>
-                    <option value="#93c5fd">💙 Celeste</option>
-                    <option value="#6ee7b7">💚 Menta</option>
-                    <option value="#fcd34d">💛 Amarillo</option>
-                    <option value="#fca5a5">❤️ Coral</option>
-                </select>
+                <input type="number" id="tarLimite" placeholder="Límite de crédito S/ (opcional)" step="0.01" min="0" class="px-4 py-3 text-sm">
                 <button onclick="agregarTarjeta()" class="btn-primary py-3 text-sm">Agregar 💳</button>
             </div>
             <div id="tarMsg" class="mt-3 text-xs hidden py-2 px-3 rounded-xl inline-block"></div>
@@ -860,21 +859,25 @@ function renderRecurrentes() {
     const empty = document.getElementById('recEmpty');
     if (!recurrentes.length) { list.innerHTML=''; empty.classList.remove('hidden'); return; }
     empty.classList.add('hidden');
-    list.innerHTML = recurrentes.map(r=>`
-        <div class="flex justify-between items-center p-4 rounded-xl" style="background:#fdf0ff;border:1.5px solid #e8d0f8">
+    const gastosM = gastos.filter(g=>g.fecha?.startsWith(mesActual()));
+    list.innerHTML = recurrentes.map(r=>{
+        const pagadoEste = gastosM.find(g=>g.descripcion===r.descripcion&&g.categoria===r.categoria);
+        return `
+        <div class="flex justify-between items-center p-4 rounded-xl transition-all" style="background:${pagadoEste?'#f0fdf4':'#fdf0ff'};border:1.5px solid ${pagadoEste?'#86efac':'#e8d0f8'}">
             <div class="flex items-center gap-3">
+                <span style="font-size:20px;">${pagadoEste?'✅':'⏳'}</span>
                 <span class="tag" style="background:${CAT_COLORS[r.categoria]||'#f0e0f8'};color:${CAT_TEXT[r.categoria]||'#806090'}">${r.categoria}</span>
                 <div>
                     <p class="font-semibold text-sm" style="color:#5a3d6b">${r.descripcion}</p>
-                    <p class="text-xs" style="color:#c4a0c8">${r.monto_fijo?fmt(r.monto_fijo)+' fijo':'Monto variable'}</p>
+                    <p class="text-xs" style="color:${pagadoEste?'#059669':'#c4a0c8'}">${pagadoEste?'Pagado: '+fmt(pagadoEste.monto):(r.monto_fijo?fmt(r.monto_fijo)+' fijo':'Monto variable')}</p>
                 </div>
             </div>
             <div class="flex gap-2">
-                <button onclick="openRecModal('${r.id}')" class="btn-soft px-3 py-1.5 text-xs">Registrar</button>
+                ${!pagadoEste?`<button onclick="openRecModal('${r.id}')" class="btn-soft px-3 py-1.5 text-xs">Registrar</button>`:''}
                 <button onclick="eliminarRecurrente('${r.id}')" class="btn-danger px-2 py-1.5 text-xs">×</button>
             </div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 function checkRecAlerts() {
     if (!recurrentes.length) { document.getElementById('recAlertBox').classList.add('hidden'); return; }
@@ -903,7 +906,27 @@ function renderDashboard() {
     renderTabla();
     renderCharts();
     renderBudget();
+    renderTop3();
     checkRecAlerts();
+}
+function renderTop3() {
+    const sorted = [...gastos].sort((a,b)=>Number(b.monto)-Number(a.monto)).slice(0,3);
+    const box    = document.getElementById('top3Box');
+    const list   = document.getElementById('top3List');
+    if (!sorted.length) { box.classList.add('hidden'); return; }
+    box.classList.remove('hidden');
+    const medals = ['🥇','🥈','🥉'];
+    list.innerHTML = sorted.map((g,i)=>`
+        <div class="flex justify-between items-center py-2.5 ${i<sorted.length-1?'border-b':''}" style="border-color:#f3d6f0">
+            <div class="flex items-center gap-3">
+                <span class="text-xl">${medals[i]}</span>
+                <div>
+                    <p class="text-sm font-semibold" style="color:#5a3d6b">${g.descripcion||g.categoria}</p>
+                    <p class="text-xs" style="color:#c4a0c8"><span class="tag" style="background:${CAT_COLORS[g.categoria]||'#f0e0f8'};color:${CAT_TEXT[g.categoria]||'#806090'}">${g.categoria}</span> &nbsp;${fmtFecha(g.fecha)}</p>
+                </div>
+            </div>
+            <span class="font-extrabold text-sm" style="color:#9b3a7a">${fmt(g.monto)}</span>
+        </div>`).join('');
 }
 function renderCards() {
     const total  = gastos.reduce((s,g)=>s+Number(g.monto),0);
@@ -996,15 +1019,17 @@ async function cargarTarjetas() {
     renderTarjetas();
 }
 async function agregarTarjeta() {
-    const nombre = document.getElementById('tarNombre').value.trim();
-    const dia    = parseInt(document.getElementById('tarDia').value);
-    const color  = document.getElementById('tarColor').value;
+    const nombre  = document.getElementById('tarNombre').value.trim();
+    const dia     = parseInt(document.getElementById('tarDia').value);
+    const limVal  = document.getElementById('tarLimite').value;
+    const limite  = limVal ? parseFloat(limVal) : null;
     if (!nombre || !dia || dia<1 || dia>31) return showMsg('tarMsg','Completá nombre y día de vencimiento 💕','err');
     const { data:{user} } = await sb.auth.getUser();
-    const { error } = await sb.from('tarjetas').insert({user_id:user.id, nombre, dia_vencimiento:dia, color});
+    const { error } = await sb.from('tarjetas').insert({user_id:user.id, nombre, dia_vencimiento:dia, limite_credito:limite});
     if (error) return showMsg('tarMsg','Error: '+error.message,'err');
-    document.getElementById('tarNombre').value = '';
-    document.getElementById('tarDia').value    = '';
+    document.getElementById('tarNombre').value  = '';
+    document.getElementById('tarDia').value     = '';
+    document.getElementById('tarLimite').value  = '';
     showMsg('tarMsg','¡Tarjeta agregada! 💳','ok');
     setTimeout(()=>document.getElementById('tarMsg').classList.add('hidden'),2000);
     cargarTarjetas();
@@ -1014,7 +1039,7 @@ async function eliminarTarjeta(id) {
     await sb.from('tarjetas').delete().eq('id',id);
     cargarTarjetas();
 }
-function openPagoModal(nombre, color) {
+function openPagoModal(nombre) {
     document.getElementById('modalPagoTitle').textContent = `Pago: ${nombre}`;
     document.getElementById('modalPagoNombre').value      = nombre;
     document.getElementById('modalPagoMonto').value       = '';
@@ -1090,13 +1115,18 @@ function renderTarjetas() {
     const diaHoy  = hoy.getDate();
 
     grid.innerHTML = tarjetas.map((t,i) => {
-        const design   = getBankDesign(t.nombre);
-        const pagoMes  = gastosM.find(g=>g.categoria==='Tarjeta'&&g.descripcion===t.nombre);
-        const pagado   = !!pagoMes;
-        const diasFalta = t.dia_vencimiento >= diaHoy
+        const design      = getBankDesign(t.nombre);
+        const pagosCard   = gastosM.filter(g=>g.categoria==='Tarjeta'&&g.descripcion===t.nombre);
+        const gastadoMes  = pagosCard.reduce((s,g)=>s+Number(g.monto),0);
+        const pagoMes     = pagosCard[0];
+        const pagado      = gastadoMes > 0;
+        const diasFalta   = t.dia_vencimiento >= diaHoy
             ? t.dia_vencimiento - diaHoy
             : Math.ceil((new Date(hoy.getFullYear(), hoy.getMonth()+1, t.dia_vencimiento) - hoy) / 86400000);
-        const urgente  = !pagado && diasFalta <= 5;
+        const urgente     = !pagado && diasFalta <= 5;
+        const limite      = t.limite_credito ? Number(t.limite_credito) : 0;
+        const limitePct   = limite > 0 ? Math.min(gastadoMes/limite*100, 100) : 0;
+        const limiteColor = limitePct > 80 ? 'linear-gradient(90deg,#fca5a5,#ef4444)' : limitePct > 60 ? 'linear-gradient(90deg,#fde68a,#f59e0b)' : 'linear-gradient(90deg,#a78bfa,#ec4899)';
 
         return `<div class="card card-enter" style="animation-delay:${i*0.1}s;overflow:hidden;${urgente?'animation:pulseBorder 2s infinite;':''}">
 
@@ -1123,13 +1153,24 @@ function renderTarjetas() {
 
             <!-- Info pago -->
             <div style="padding:14px 16px;">
+                ${limite > 0 ? `
+                    <div style="margin-bottom:10px;">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                            <span style="color:#8b5cf6;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">Usado este mes</span>
+                            <span style="color:#5a3d6b;font-size:10px;font-weight:700;">${fmt(gastadoMes)} / ${fmt(limite)}</span>
+                        </div>
+                        <div style="height:6px;background:#f3d6f0;border-radius:20px;overflow:hidden;">
+                            <div style="height:100%;width:${limitePct}%;background:${limiteColor};border-radius:20px;transition:width 1s ease;"></div>
+                        </div>
+                    </div>
+                ` : ''}
                 ${pagado ? `
                     <div style="background:#f0fdf4;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
                         <div>
                             <p style="color:#059669;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;">✅ Pagado este mes</p>
-                            <p style="color:#065f46;font-size:20px;font-weight:800;margin-top:2px;">${fmt(pagoMes.monto)}</p>
+                            <p style="color:#065f46;font-size:20px;font-weight:800;margin-top:2px;">${fmt(gastadoMes)}</p>
                         </div>
-                        <p style="color:#6ee7b7;font-size:11px;">${fmtFecha(pagoMes.fecha)}</p>
+                        <p style="color:#6ee7b7;font-size:11px;">${pagoMes ? fmtFecha(pagoMes.fecha) : ''}</p>
                     </div>
                 ` : `
                     <div style="background:${urgente?'#fff1f2':'#fafafa'};border-radius:12px;padding:10px 12px;margin-bottom:10px;border:1px solid ${urgente?'#fecaca':'#f0e8ff'};">
@@ -1138,7 +1179,7 @@ function renderTarjetas() {
                             ${diasFalta===0?'¡Vence hoy!':diasFalta===1?'Vence mañana':`Faltan ${diasFalta} días`}
                         </p>
                     </div>
-                    <button onclick="openPagoModal('${t.nombre.replace(/'/g,"\\'")}','${t.color}')"
+                    <button onclick="openPagoModal('${t.nombre.replace(/'/g,"\\'")}')"
                         style="width:100%;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:white;border:none;border-radius:12px;padding:10px;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:0.3px;"
                         onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                         Registrar pago
