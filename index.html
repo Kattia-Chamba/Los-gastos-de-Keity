@@ -1029,54 +1029,116 @@ async function confirmarPagoTarjeta() {
     await cargarTodosGastos();
     renderTarjetas();
 }
+const BANK_DESIGNS = {
+    'BCP':  {
+        bg: 'linear-gradient(135deg,#003087 0%,#0057b8 60%,#1a73c8 100%)',
+        logoSvg: `<text x="0" y="16" font-family="Arial Black,sans-serif" font-weight="900" font-size="16" fill="white" letter-spacing="1">BCP</text>`,
+        networkSvg: `<circle cx="12" cy="11" r="10" fill="#eb001b" opacity="0.9"/><circle cx="22" cy="11" r="10" fill="#f79e1b" opacity="0.9"/><path d="M17 3.8a10 10 0 0 1 0 14.4A10 10 0 0 1 17 3.8z" fill="#ff5f00"/>`,
+    },
+    'BBVA': {
+        bg: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%)',
+        logoSvg: `<text x="0" y="15" font-family="Arial Black,sans-serif" font-weight="900" font-size="13" fill="#00adef" letter-spacing="2">BBVA</text><text x="0" y="26" font-family="Arial,sans-serif" font-size="8" fill="#aaa" letter-spacing="1">FREE PLATINUM</text>`,
+        networkSvg: `<rect x="2" y="6" width="30" height="10" rx="2" fill="none" stroke="#c0c0c0" stroke-width="1"/><text x="6" y="14" font-family="Arial,sans-serif" font-size="7" fill="#c0c0c0">PLATINUM</text>`,
+    },
+    'IO':   {
+        bg: 'linear-gradient(135deg,#050505 0%,#0d1b2a 50%,#0a2540 100%)',
+        logoSvg: `<text x="0" y="20" font-family="Arial Black,sans-serif" font-weight="900" font-size="22" fill="#1e90ff">io</text>`,
+        networkSvg: `<circle cx="12" cy="11" r="10" fill="#eb001b" opacity="0.85"/><circle cx="22" cy="11" r="10" fill="#f79e1b" opacity="0.85"/><path d="M17 3.8a10 10 0 0 1 0 14.4A10 10 0 0 1 17 3.8z" fill="#ff5f00"/>`,
+    },
+    'OH':   {
+        bg: 'linear-gradient(135deg,#a50014 0%,#d4001a 50%,#ff1a35 100%)',
+        logoSvg: `<text x="0" y="20" font-family="Arial Black,sans-serif" font-weight="900" font-size="20" fill="white">Oh!</text>`,
+        networkSvg: `<circle cx="12" cy="11" r="10" fill="rgba(255,255,255,0.25)"/><circle cx="22" cy="11" r="10" fill="rgba(255,255,255,0.15)"/>`,
+    },
+};
+
+function getBankDesign(nombre) {
+    const n = nombre.toUpperCase().replace(/[^A-Z]/g,'');
+    for (const [key, val] of Object.entries(BANK_DESIGNS)) {
+        if (n.includes(key)) return val;
+    }
+    return {
+        bg: 'linear-gradient(135deg,#667eea,#764ba2)',
+        logoSvg: `<text x="0" y="15" font-family="Arial,sans-serif" font-weight="700" font-size="12" fill="white">${nombre.slice(0,8)}</text>`,
+        networkSvg: '',
+    };
+}
+
+function cardChipSvg() {
+    return `<svg width="32" height="26" viewBox="0 0 32 26">
+        <rect x="1" y="1" width="30" height="24" rx="4" fill="#d4a843" stroke="#b8902e" stroke-width="0.5"/>
+        <rect x="1" y="9" width="30" height="8" fill="#c9982a"/>
+        <rect x="11" y="1" width="10" height="24" fill="#c9982a"/>
+    </svg>`;
+}
+
 function renderTarjetas() {
     const grid  = document.getElementById('tarjetasGrid');
     const empty = document.getElementById('tarjetasEmpty');
     if (!tarjetas.length) { grid.innerHTML=''; empty.classList.remove('hidden'); return; }
     empty.classList.add('hidden');
 
-    const mes       = mesActual();
-    const gastosM   = gastos.filter(g=>g.fecha?.startsWith(mes));
-    const hoy       = new Date();
-    const diaHoy    = hoy.getDate();
+    const mes     = mesActual();
+    const gastosM = gastos.filter(g=>g.fecha?.startsWith(mes));
+    const hoy     = new Date();
+    const diaHoy  = hoy.getDate();
 
-    grid.innerHTML = tarjetas.map(t => {
-        const pagoMes = gastosM.find(g=>g.categoria==='Tarjeta'&&g.descripcion===t.nombre);
-        const pagado  = !!pagoMes;
+    grid.innerHTML = tarjetas.map((t,i) => {
+        const design   = getBankDesign(t.nombre);
+        const pagoMes  = gastosM.find(g=>g.categoria==='Tarjeta'&&g.descripcion===t.nombre);
+        const pagado   = !!pagoMes;
         const diasFalta = t.dia_vencimiento >= diaHoy
             ? t.dia_vencimiento - diaHoy
-            : new Date(hoy.getFullYear(), hoy.getMonth()+1, t.dia_vencimiento) - hoy > 0
-                ? Math.ceil((new Date(hoy.getFullYear(), hoy.getMonth()+1, t.dia_vencimiento) - hoy) / 86400000)
-                : 0;
-        const urgente = !pagado && diasFalta <= 5;
-        const borderColor = urgente ? '#fca5a5' : t.color;
+            : Math.ceil((new Date(hoy.getFullYear(), hoy.getMonth()+1, t.dia_vencimiento) - hoy) / 86400000);
+        const urgente  = !pagado && diasFalta <= 5;
 
-        return `<div class="card card-enter p-5" style="border-color:${borderColor}; border-width:2px; ${urgente?'animation: pulseBorder 2s infinite;':''}">
-            <div class="flex justify-between items-start mb-4">
-                <div>
-                    <div class="w-10 h-7 rounded-lg mb-2" style="background:linear-gradient(135deg,${t.color},${t.color}99)"></div>
-                    <p class="font-extrabold text-base" style="color:#5a3d6b">${t.nombre}</p>
-                    <p class="text-xs mt-0.5" style="color:#c4a0c8">Vence el <strong>día ${t.dia_vencimiento}</strong> de cada mes</p>
+        return `<div class="card card-enter" style="animation-delay:${i*0.1}s;overflow:hidden;${urgente?'animation:pulseBorder 2s infinite;':''}">
+
+            <!-- Tarjeta física -->
+            <div style="background:${design.bg};border-radius:18px 18px 0 0;padding:22px 20px 18px;position:relative;height:175px;overflow:hidden;">
+                <div style="position:absolute;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.04);top:-80px;right:-50px;pointer-events:none;"></div>
+                <div style="position:absolute;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,0.03);bottom:-50px;left:-30px;pointer-events:none;"></div>
+
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+                    <svg height="28" width="90" viewBox="0 0 90 28">${design.logoSvg}</svg>
+                    <button onclick="eliminarTarjeta('${t.id}')" style="background:rgba(255,255,255,0.15);border:none;color:rgba(255,255,255,0.8);border-radius:8px;width:24px;height:24px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;">×</button>
                 </div>
-                <button onclick="eliminarTarjeta('${t.id}')" class="btn-danger px-2 py-1 text-xs">×</button>
+
+                ${cardChipSvg()}
+
+                <div style="position:absolute;bottom:18px;left:20px;right:20px;display:flex;justify-content:space-between;align-items:flex-end;">
+                    <div>
+                        <p style="color:rgba(255,255,255,0.45);font-size:8px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:3px;">Vence día</p>
+                        <p style="color:rgba(255,255,255,0.9);font-family:'Courier New',monospace;font-size:16px;font-weight:700;letter-spacing:1px;">${String(t.dia_vencimiento).padStart(2,'0')} / ••</p>
+                    </div>
+                    <svg height="22" width="36" viewBox="0 0 36 22">${design.networkSvg}</svg>
+                </div>
             </div>
 
-            ${pagado ? `
-                <div class="rounded-xl p-3 mb-3" style="background:#f0fdf4; border:1.5px solid #a7f3d0">
-                    <p class="text-xs font-bold text-emerald-600">✅ Pagado este mes</p>
-                    <p class="text-lg font-extrabold text-emerald-700 mt-0.5">${fmt(pagoMes.monto)}</p>
-                    <p class="text-xs text-emerald-500">${fmtFecha(pagoMes.fecha)}</p>
-                </div>
-            ` : `
-                <div class="rounded-xl p-3 mb-3" style="background:${urgente?'#fff1f2':'#fdf0ff'}; border:1.5px solid ${urgente?'#fca5a5':'#e8d0f8'}">
-                    <p class="text-xs font-bold" style="color:${urgente?'#e05070':'#c054a0'}">${urgente?'⚠️ Vence pronto':'⏳ Pendiente este mes'}</p>
-                    <p class="text-sm font-semibold mt-0.5" style="color:${urgente?'#e05070':'#9b3a7a'}">
-                        ${diasFalta===0 ? '¡Vence hoy!' : `Faltan ${diasFalta} día${diasFalta===1?'':'s'}`}
-                    </p>
-                </div>
-            `}
-
-            ${!pagado ? `<button onclick="openPagoModal('${t.nombre.replace(/'/g,"\\'")}','${t.color}')" class="w-full btn-primary py-2.5 text-sm">Registrar pago 💳</button>` : ''}
+            <!-- Info pago -->
+            <div style="padding:14px 16px;">
+                ${pagado ? `
+                    <div style="background:#f0fdf4;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <p style="color:#059669;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;">✅ Pagado este mes</p>
+                            <p style="color:#065f46;font-size:20px;font-weight:800;margin-top:2px;">${fmt(pagoMes.monto)}</p>
+                        </div>
+                        <p style="color:#6ee7b7;font-size:11px;">${fmtFecha(pagoMes.fecha)}</p>
+                    </div>
+                ` : `
+                    <div style="background:${urgente?'#fff1f2':'#fafafa'};border-radius:12px;padding:10px 12px;margin-bottom:10px;border:1px solid ${urgente?'#fecaca':'#f0e8ff'};">
+                        <p style="color:${urgente?'#ef4444':'#8b5cf6'};font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;">${urgente?'⚠️ Vence pronto':'⏳ Pendiente'}</p>
+                        <p style="color:${urgente?'#dc2626':'#5b21b6'};font-size:13px;font-weight:700;margin-top:2px;">
+                            ${diasFalta===0?'¡Vence hoy!':diasFalta===1?'Vence mañana':`Faltan ${diasFalta} días`}
+                        </p>
+                    </div>
+                    <button onclick="openPagoModal('${t.nombre.replace(/'/g,"\\'")}','${t.color}')"
+                        style="width:100%;background:linear-gradient(135deg,#ec4899,#8b5cf6);color:white;border:none;border-radius:12px;padding:10px;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:0.3px;"
+                        onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                        Registrar pago
+                    </button>
+                `}
+            </div>
         </div>`;
     }).join('');
 }
